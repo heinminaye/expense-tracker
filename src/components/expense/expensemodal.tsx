@@ -288,7 +288,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                       onChange={(e) =>
                         setNewExpense({ ...newExpense, detail: e.target.value })
                       }
-                      className={`w-full h-full resize-none p-2 rounded-md border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
+                      className={`w-full h-full resize-none py-2 px-3 rounded-md border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
                         darkMode
                           ? "bg-gray-700 border-gray-600 focus:border-blue-500"
                           : "border-gray-300 focus:border-blue-500"
@@ -343,7 +343,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                   <div className="overflow-auto max-h-[280px] flex-1">
                     <table className="min-w-full divide-y text-md">
                       <thead
-                        className={`sticky top-0 ${
+                        className={`sticky top-0 z-10 ${
                           darkMode ? "bg-gray-700" : "bg-gray-50"
                         }`}
                       >
@@ -399,7 +399,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                                 : "hover:bg-gray-50"
                             } transition-colors duration-150`}
                           >
-                            <td className="px-1 py-1 whitespace-nowrap text-center text-sm text-gray-400">{index}</td>
+                            <td className="px-1 py-1 whitespace-nowrap text-center text-sm text-gray-500">{index}</td>
                             <td className="px-1 py-1 whitespace-nowrap">
                               <input
                                 type="text"
@@ -558,7 +558,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className={`px-3 py-1.5 rounded focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-200 text-sm ${
+                  className={`px-3 py-2 rounded focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-200 text-sm ${
                     darkMode
                       ? "bg-gray-700 text-white hover:bg-gray-600 focus:ring-gray-500 focus:ring-offset-gray-800"
                       : "bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500"
@@ -568,13 +568,13 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className={`px-4 py-1.5 rounded focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-200 text-sm ${
+                  className={`px-4 py-2 rounded focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-200 text-sm ${
                     darkMode
                       ? "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 focus:ring-offset-gray-800"
                       : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
                   }`}
                 >
-                  {isEditMode ? "Save" : "Add"}
+                  {isEditMode ? "Save Expense" : "Add Expense"}
                 </button>
               </div>
             </div>
