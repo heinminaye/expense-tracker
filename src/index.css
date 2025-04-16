@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  position: absolute;
+  right: 0;
+}
+
+.sonner-toast-success {
+  background-color: #4caf50; 
+  color: #ffffff; 
+}
+
+.sonner-toast-error {
+  background-color: #f44336;
+  color: #ffffff;
+}
+
+.sonner-toast-info {
+  background-color: #2196f3;
+  color: #ffffff; 
+}
+
+.sonner-toast-loading {
+  background-color: #ffc107; 
+  color: #ffffff;
+}
+
+@keyframes grow {
+  from {
+    opacity: 0;
+    transform: scaleY(0); /* Start with no height */
+  }
+  to {
+    transform: scaleY(1); /* Grow to full height */
+  }
+}
+
+@keyframes category-percent {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@layer components {
+  .receipt-label {
+    @apply inline-block w-24 text-gray-600 font-medium;
+  }
+  .receipt-value {
+    @apply text-gray-800;
+  }
+  .receipt-total-box {
+    @apply bg-blue-50 rounded-lg p-4 w-full max-w-xs;
+  }
+  .receipt-notes-box {
+    @apply bg-gray-50 rounded-lg p-4;
+  }
+}
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-content, .print-content * {
+    visibility: visible;
+  }
+  .print-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+  }
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+}
+
