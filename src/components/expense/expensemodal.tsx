@@ -399,7 +399,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                                 : "hover:bg-gray-50"
                             } transition-colors duration-150`}
                           >
-                            <td className="px-1 py-1 whitespace-nowrap text-center text-sm text-gray-500">{index}</td>
+                            <td className="px-1 py-1 whitespace-nowrap text-center text-sm text-gray-500">{index+1}</td>
                             <td className="px-1 py-1 whitespace-nowrap">
                               <input
                                 type="text"

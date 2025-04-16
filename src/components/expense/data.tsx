@@ -76,11 +76,19 @@ const Data: React.FC = () => {
   const filteredItems = expenses.filter((item) => {
     // Filter by date range
     if (dateRange) {
-      const [startDate, endDate] = dateRange.split(" to ");
-      const itemDate = new Date(item.date);
-      if (itemDate < new Date(startDate) || itemDate > new Date(endDate)) {
-        return false;
-      }
+      const [startDateStr, endDateStr] = dateRange.split(" to ");
+    
+    // Create date objects at the start and end of the day
+    const startDate = new Date(startDateStr);
+    startDate.setHours(0, 0, 0, 0);
+    
+    const endDate = new Date(endDateStr);
+    endDate.setHours(23, 59, 59, 999);
+    
+    const itemDate = new Date(item.date);
+    itemDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+    
+    return itemDate >= startDate && itemDate <= endDate;
     }
 
     // Filter by search term
@@ -113,7 +121,7 @@ const Data: React.FC = () => {
         sum +
         item.breakdownItems.reduce(
           (itemSum, breakdown) =>
-            itemSum + breakdown.price * breakdown.quantity,
+            itemSum + breakdown.price,
           0
         )
       );
@@ -126,7 +134,8 @@ const Data: React.FC = () => {
       id: expenses.length + 1,
       ...newExpense,
     };
-    setExpenses([...expenses, newItem]);
+    setExpenses((prev) => [...prev, newItem]);
+    setShowModal(false);
   };
 
   const handleUpdateExpense = (updatedExpense: ExpenseItem) => {
@@ -508,6 +517,9 @@ const Data: React.FC = () => {
                                     <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
                                       <tr>
                                         <th className="px-3 py-2 text-left">
+                                          ID
+                                        </th>
+                                        <th className="px-3 py-2 text-left">
                                           Item
                                         </th>
                                         <th className="px-3 py-2 text-left">
@@ -516,21 +528,19 @@ const Data: React.FC = () => {
                                         <th className="px-3 py-2 text-right">
                                           Price
                                         </th>
-                                        <th className="px-3 py-2 text-right">
-                                          Subtotal
-                                        </th>
-                                        <th className="px-3 py-2 text-left">
-                                          Notes
-                                        </th>
                                       </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-100">
                                       {item.breakdownItems.map(
                                         (breakdown, idx) => (
+                                          
                                           <tr
                                             key={idx}
                                             className="hover:bg-gray-50"
                                           >
+                                          <td className="px-3 py-2 font-medium text-gray-900">
+                                            {idx+1}
+                                          </td>
                                             <td className="px-3 py-2 font-medium text-gray-900">
                                               {breakdown.name}
                                             </td>
@@ -539,16 +549,6 @@ const Data: React.FC = () => {
                                             </td>
                                             <td className="px-3 py-2 text-right text-gray-700">
                                               ${breakdown.price.toFixed(2)}
-                                            </td>
-                                            <td className="px-3 py-2 text-right font-semibold text-gray-900">
-                                              $
-                                              {(
-                                                breakdown.price *
-                                                breakdown.quantity
-                                              ).toFixed(2)}
-                                            </td>
-                                            <td className="px-3 py-2 text-gray-600 italic">
-                                              {breakdown.notes || "-"}
                                             </td>
                                           </tr>
                                         )
