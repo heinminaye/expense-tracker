@@ -42,14 +42,14 @@ function NavBar() {
         {getPageName(location.pathname)}
       </div>
       <div className="flex justify-end">
-        <div className="hidden relative sm:flex items-center space-x-3 w-[300px] mr-5">
+        {/* <div className="hidden relative sm:flex items-center space-x-3 w-[300px] mr-5">
           <input
             type="text"
             placeholder="Search..."
             className="w-full py-1.5 pl-5 pr-9 rounded-lg border border-gray-300 dark:bg-slate-800 dark:border-slate-500 text-sm focus:outline-none focus:ring-1 focus:ring-blue-300 transition-all"
           />
           <RiSearch2Line className="absolute h-full flex justify-center items-center right-3.5 text-md text-gray-500 dark:text-gray-400" />
-        </div>
+        </div> */}
 
         {/* Dark Mode Toggle */}
         <div className="hidden sm:flex items-center">

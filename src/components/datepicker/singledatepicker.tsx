@@ -94,7 +94,7 @@ const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
   };
 
   return (
-    <div className={`relative ${className}`} ref={pickerRef}>
+    <div className={`relative overflow-visible ${className}`} ref={pickerRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -126,17 +126,17 @@ const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
           }`}
         >
           <div
-            className={`flex justify-between items-center mb-4 mx-3 ${
+            className={`flex justify-between items-center mb-2 mx-1 ${
               darkMode ? "text-white" : "text-gray-700"
             }`}
           >
             <button
               onClick={() => navigateMonth("prev")}
-              className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+              className="p-1 text-sm items-center flex justify-center rounded-md hover:bg-gray-200 transition-colors duration-200"
             >
               &lt;
             </button>
-            <span className="font-medium">
+            <span className="font-medium  text-sm">
               {new Date(currentYear, currentMonth).toLocaleString("en-US", {
                 month: "short",
                 year: "numeric",
@@ -144,7 +144,7 @@ const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
             </span>
             <button
               onClick={() => navigateMonth("next")}
-              className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+              className="p-1 text-sm items-center flex justify-center rounded-md hover:bg-gray-200  transition-colors duration-200"
             >
               &gt;
             </button>
@@ -177,7 +177,7 @@ const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
                   type="button"
                   key={day}
                   onClick={() => handleDayClick(day)}
-                  className={`w-6 h-6 mx-2 flex items-center text-xs justify-center rounded-full cursor-pointer transition-colors duration-200 ${
+                  className={`w-6 h-6 mx-1 flex items-center text-xs justify-center rounded-full cursor-pointer transition-colors duration-200 ${
                     darkMode
                       ? isSelected
                         ? "bg-blue-600 text-white"

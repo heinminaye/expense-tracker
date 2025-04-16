@@ -19,7 +19,7 @@ function RootLayout() {
     <div className="flex h-screen">
   <SideBar />
   <div
-    className={`lg:min-w-[calc(100vw-${isSidebarOpen ? '300px' : '74px'})] sm:fixed sm:left-[74px] w-full h-screen sm:w-[calc(100vw-74px)] lg:relative lg:left-0`}
+    className={`lg:min-w-[calc(100vw-${isSidebarOpen ? '300px' : '74px'})] sm:absolute  sm:left-[74px] w-full h-screen sm:w-[calc(100vw-74px)] lg:relative lg:left-0`}
   >
     <NavBar />
     <div className="h-[calc(100vh-64px)] overflow-y-auto">
