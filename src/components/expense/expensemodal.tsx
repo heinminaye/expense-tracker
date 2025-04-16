@@ -34,7 +34,10 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target as Node)
+      ) {
         onClose();
       }
     };
@@ -48,8 +51,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
       document.body.style.overflow = "auto";
       document.addEventListener("mousedown", handleClickOutside);
     };
-  }, [show,onClose]);
-
+  }, [show, onClose]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -86,10 +88,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
   };
 
   const updateTotal = (items: BreakdownItem[]) => {
-    const total = items.reduce(
-      (sum, item) => sum + item.price,
-      0
-    );
+    const total = items.reduce((sum, item) => sum + item.price, 0);
     setNewExpense((prev) => ({ ...prev, expense: total }));
   };
 
@@ -98,14 +97,16 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
     field: keyof BreakdownItem,
     value: string | number
   ) => {
-    if (field === 'quantity') {
+    if (field === "quantity") {
       const stringValue = String(value);
-      
-      if (!/^\d+[\u1000-\u109Fa-zA-Z]*$/.test(stringValue) && stringValue !== '') {
+
+      if (
+        !/^\d+[\u1000-\u109Fa-zA-Z]*$/.test(stringValue) &&
+        stringValue !== ""
+      ) {
         // If invalid, don't update the state
         return;
       }
-  
     }
 
     if (field === "price") {
@@ -118,8 +119,11 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
     updatedItems[index] = {
       ...updatedItems[index],
       [field]:
-      field === "price" ? Number(value) : 
-      (field === "quantity" ? value : value),
+        field === "price"
+          ? Number(value)
+          : field === "quantity"
+          ? value
+          : value,
     };
 
     setBreakdownItems(updatedItems);
@@ -148,7 +152,8 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
       <div
         className={`rounded-xl fixed shadow-xl z-40 w-full max-w-4xl flex flex-col min-h-[80vh] max-h-[80vh] overflow-hidden transition-all duration-300 transform ${
           darkMode ? "bg-gray-800 text-white" : "bg-white text-gray-800"
-        }`} ref={modalRef}
+        }`}
+        ref={modalRef}
       >
         {/* Header */}
         <div
@@ -262,7 +267,6 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                     value={newExpense.date}
                     onChange={(date) => setNewExpense({ ...newExpense, date })}
                     darkMode={darkMode}
-                    size="small"
                   />
                   {errors.date && (
                     <p className="mt-1 text-xs text-red-500">{errors.date}</p>
@@ -344,6 +348,13 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                         }`}
                       >
                         <tr>
+                        <th
+                            className={`px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${
+                              darkMode ? "text-gray-300" : "text-gray-500"
+                            }`}
+                          >
+                            ID
+                          </th>
                           <th
                             className={`px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${
                               darkMode ? "text-gray-300" : "text-gray-500"
@@ -388,6 +399,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                                 : "hover:bg-gray-50"
                             } transition-colors duration-150`}
                           >
+                            <td className="px-1 py-1 whitespace-nowrap text-center text-sm text-gray-400">{index}</td>
                             <td className="px-1 py-1 whitespace-nowrap">
                               <input
                                 type="text"
@@ -422,7 +434,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                                   )
                                 }
                                 pattern="^\d+[\u1000-\u109Fa-zA-Z]*$"
-                                className={`w-full p-2 leading-3 rounded border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
+                                className={`w-32 p-2 leading-3 rounded border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
                                   darkMode
                                     ? "border-gray-600 bg-gray-700 focus:border-blue-500"
                                     : "border-gray-300 focus:border-blue-500"
@@ -484,14 +496,11 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
                                   className="h-4 w-4"
-                                  viewBox="0 0 20 20"
+                                  viewBox="0 0 24 24"
                                   fill="currentColor"
                                 >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2h10a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0010 2H9zM5 8a1 1 0 011-1h8a1 1 0 011 1v8a1 1 0 01-1 1H6a1 1 0 01-1-1V8z"
-                                    clipRule="evenodd"
-                                  />
+                                  <path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zm3-9a1 1 0 012 0v6a1 1 0 01-2 0V10zm4 0a1 1 0 012 0v6a1 1 0 01-2 0V10z" />
+                                  <path d="M15.5 4l-1-1h-5l-1 1H5v2h14V4h-3.5z" />
                                 </svg>
                               </button>
                             </td>

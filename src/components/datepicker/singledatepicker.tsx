@@ -94,7 +94,7 @@ const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
   };
 
   return (
-    <div className={`relative overflow-visible ${className}`} ref={pickerRef}>
+    <div className={`relative text-sm ${className}`} ref={pickerRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
