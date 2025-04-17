@@ -11,5 +11,4 @@ export interface ExpenseItem {
     name: string;
     price: number;
     quantity: number | string;
-    notes: string;
   }

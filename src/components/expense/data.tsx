@@ -4,6 +4,10 @@ import ExpenseModal from "./expensemodal";
 import SinglePrintReceipt from "./singleprintreceipt";
 import PrintAllReceipts from "./printallreceipts";
 import { ExpenseItem } from "../types/expense";
+import {
+  FaChevronDown,
+  FaChevronRight,
+} from "react-icons/fa";
 
 const initialDataItems: ExpenseItem[] = [
   {
@@ -16,10 +20,9 @@ const initialDataItems: ExpenseItem[] = [
       {
         name: "Burger",
         price: 10,
-        quantity: 2,
-        notes: "With cheese and bacon",
+        quantity: 2
       },
-      { name: "Drink", price: 5, quantity: 2, notes: "Iced tea with lemon" },
+      { name: "Drink", price: 5, quantity: 2},
     ],
   },
   {
@@ -29,7 +32,7 @@ const initialDataItems: ExpenseItem[] = [
     date: "2025-04-02",
     detail: "Bus fare to client meeting",
     breakdownItems: [
-      { name: "Bus ticket", price: 5, quantity: 2, notes: "Round trip" },
+      { name: "Bus ticket", price: 5, quantity: 2 },
     ],
   },
   {
@@ -39,8 +42,8 @@ const initialDataItems: ExpenseItem[] = [
     date: "2025-04-03",
     detail: "Weekly groceries",
     breakdownItems: [
-      { name: "Vegetables", price: 20, quantity: 1, notes: "Organic produce" },
-      { name: "Meat", price: 30, quantity: 1, notes: "Chicken breast" },
+      { name: "Vegetables", price: 20, quantity: 1 },
+      { name: "Meat", price: 30, quantity: 1},
     ],
   },
   {
@@ -50,7 +53,7 @@ const initialDataItems: ExpenseItem[] = [
     date: "2025-04-04",
     detail: "Movie ticket for new release",
     breakdownItems: [
-      { name: "Ticket", price: 15, quantity: 1, notes: "Evening show" },
+      { name: "Ticket", price: 15, quantity: 1},
     ],
   },
   {
@@ -69,7 +72,7 @@ const Data: React.FC = () => {
   const [itemToPrint, setItemToPrint] = useState<ExpenseItem | null>(null);
   const [showPrintAll, setShowPrintAll] = useState<boolean>(false);
   const [editingItem, setEditingItem] = useState<ExpenseItem | null>(null);
-  const [expandedItems, setExpandedItems] = useState<number[]>([]);
+  const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
 
@@ -77,18 +80,18 @@ const Data: React.FC = () => {
     // Filter by date range
     if (dateRange) {
       const [startDateStr, endDateStr] = dateRange.split(" to ");
-    
-    // Create date objects at the start and end of the day
-    const startDate = new Date(startDateStr);
-    startDate.setHours(0, 0, 0, 0);
-    
-    const endDate = new Date(endDateStr);
-    endDate.setHours(23, 59, 59, 999);
-    
-    const itemDate = new Date(item.date);
-    itemDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
-    
-    return itemDate >= startDate && itemDate <= endDate;
+
+      // Create date objects at the start and end of the day
+      const startDate = new Date(startDateStr);
+      startDate.setHours(0, 0, 0, 0);
+
+      const endDate = new Date(endDateStr);
+      endDate.setHours(23, 59, 59, 999);
+
+      const itemDate = new Date(item.date);
+      itemDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+
+      return itemDate >= startDate && itemDate <= endDate;
     }
 
     // Filter by search term
@@ -101,8 +104,7 @@ const Data: React.FC = () => {
 
       const matchesBreakdown = item.breakdownItems?.some(
         (breakdown) =>
-          breakdown.name.toLowerCase().includes(term) ||
-          breakdown.notes?.toLowerCase().includes(term)
+          breakdown.name.toLowerCase().includes(term)
       );
 
       return matchesMain || matchesBreakdown;
@@ -120,8 +122,7 @@ const Data: React.FC = () => {
       return (
         sum +
         item.breakdownItems.reduce(
-          (itemSum, breakdown) =>
-            itemSum + breakdown.price,
+          (itemSum, breakdown) => itemSum + breakdown.price,
           0
         )
       );
@@ -149,18 +150,7 @@ const Data: React.FC = () => {
 
   const handleDeleteExpense = (id: number) => {
     setExpenses(expenses.filter((item) => item.id !== id));
-    setExpandedItems(expandedItems.filter((itemId) => itemId !== id));
     setSelectedItems(selectedItems.filter((itemId) => itemId !== id));
-  };
-
-  const toggleDropdown = (id: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
-
-  const toggleExpandItem = (id: number) => {
-    setExpandedItems((prev) =>
-      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
-    );
   };
 
   const toggleSelectItem = (id: number, e: React.MouseEvent) => {
@@ -184,6 +174,13 @@ const Data: React.FC = () => {
       selectedItems.includes(item.id)
     );
     setShowPrintAll(true);
+  };
+
+  const toggleRowExpand = (id: number) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
   };
 
   return (
@@ -305,13 +302,14 @@ const Data: React.FC = () => {
           </div>
         </div>
 
-        {/* Main Table */}
-        <div className="flex-1 overflow-hidden">
+        {/* Enhanced Nested Table */}
+        <div className="flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
           <div className="h-full overflow-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 sticky top-0 z-10">
-                <tr className="border-b">
-                  <th className="p-4 text-center">
+            <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
+                <tr>
+                  <th className="w-12 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"></th>
+                  <th className="w-12 px-4 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                     <input
                       type="checkbox"
                       checked={
@@ -319,243 +317,245 @@ const Data: React.FC = () => {
                         filteredItems.length > 0
                       }
                       onChange={toggleSelectAll}
-                      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                   </th>
-                  <th className="p-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="w-14 px-4 py-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
                     ID
                   </th>
-                  <th className="p-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
-                    Category
+                  <th className="px-4 py-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    Expense
                   </th>
-                  <th className="p-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="p-4 text-right text-sm font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-right text-sm font-medium text-gray-700 uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="p-4 text-center text-sm font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-center text-sm font-medium text-gray-700 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredItems.map((item, index) => (
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {filteredItems.map((item) => (
                   <React.Fragment key={item.id}>
+                    {/* Main Row */}
                     <tr
-                      className="hover:bg-blue-50/50 cursor-pointer transition-colors"
-                      onClick={() => toggleExpandItem(item.id)}
+                      className={`hover:bg-gray-50 transition-colors cursor-pointer ${
+                        expandedRows[item.id] ? "bg-blue-50" : "bg-white"
+                      }`}
+                      onClick={() => toggleRowExpand(item.id)}
                     >
-                      <td
-                        className="p-4 text-center"
-                        onClick={(e) => toggleSelectItem(item.id, e)}
-                      >
+                      <td className="whitespace-nowrap text-center items-center px-4">
+                        <button onClick={() => toggleRowExpand(item.id)}
+                          className="text-gray-500 h-3 w-4 text-sm cursor-pointer"
+                        >
+                          {expandedRows[item.id] ? (
+                            <FaChevronDown/>
+                          ) : (
+                            <FaChevronRight/>
+                          )}
+                        </button>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3">
                         <input
                           type="checkbox"
                           checked={selectedItems.includes(item.id)}
                           onChange={(e) => toggleSelectItem(item.id, e)}
-                          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                           onClick={(e) => e.stopPropagation()}
+                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                       </td>
-                      <td className="p-4">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {index + 1}
-                        </span>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">
+                        {item.id}
                       </td>
-                      <td className="p-4 font-medium text-gray-900">
-                        <div className="flex items-center gap-2">
-                          {item.category}
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <div className="flex items-center">
+                          <div>
+                            <div className="font-medium text-sm text-gray-900">
+                              {item.category}
+                            </div>
+                          
+                          </div>
                         </div>
                       </td>
-                      <td className="p-4 text-gray-600 text-sm">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-700">
                         {new Date(item.date).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
                           year: "numeric",
                         })}
                       </td>
-                      <td className="p-4 text-right font-medium text-gray-900">
-                        ${item.expense.toFixed(2)}
+                      <td className="whitespace-nowrap px-4 py-3 text-right">
+                        <span className="font-medium text-sm text-gray-800">
+                          ${item.expense.toFixed(2)}
+                        </span>
                       </td>
-                      <td className="p-4 text-center">
-  <div className="flex justify-center gap-2">
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        setEditingItem(item);
-      }}
-      className="text-blue-600 hover:text-blue-800 p-1 rounded-lg hover:bg-blue-100 transition-colors"
-      title="Edit"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-5 w-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-        />
-      </svg>
-    </button>
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        setItemToPrint(item);
-      }}
-      className="text-green-600 hover:text-green-800 p-1 rounded-lg hover:bg-green-100 transition-colors"
-      title="Print"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-5 w-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-        />
-      </svg>
-    </button>
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        handleDeleteExpense(item.id);
-      }}
-      className="text-red-600 hover:text-red-800 p-1 rounded-lg hover:bg-red-100 transition-colors"
-      title="Delete"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-5 w-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-        />
-      </svg>
-    </button>
-  </div>
-</td>
+                      <td className="text-center">
+                        <div className="flex justify-center gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingItem(item);
+                            }}
+                            className="text-blue-600 hover:text-blue-800 p-1 rounded-lg hover:bg-blue-100 transition-colors"
+                            title="Edit"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setItemToPrint(item);
+                            }}
+                            className="text-green-600 hover:text-green-800 p-1 rounded-lg hover:bg-green-100 transition-colors"
+                            title="Print"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteExpense(item.id);
+                            }}
+                            className="text-red-600 hover:text-red-800 p-1 rounded-lg hover:bg-red-100 transition-colors"
+                            title="Delete"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
                     </tr>
-                    {expandedItems.includes(item.id) && (
-                      <tr className="border-b">
-                        <td colSpan={6} className="p-6 bg-gray-50">
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                            {/* Expense Details */}
-                            <div className="bg-white p-6 rounded-xl shadow border border-gray-200 min-h-48">
-                              <h3 className="text-lg font-semibold text-blue-700 flex items-center mb-4 border-b pb-2">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-5 w-5 mr-2 text-blue-500"
-                                  viewBox="0 0 20 20"
-                                  fill="currentColor"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                                Expense Details
-                              </h3>
-                              <div className="grid grid-cols-2 gap-y-3 text-sm text-gray-700">
-                                <div className="font-medium">Description:</div>
-                                <div>{item.detail || "N/A"}</div>
-                                <div className="font-medium">Date:</div>
-                                <div>
-                                  {new Date(item.date).toLocaleDateString(
-                                    "en-US",
-                                    {
-                                      year: "numeric",
-                                      month: "long",
-                                      day: "numeric",
-                                    }
-                                  )}
-                                </div>
-                                <div className="font-medium">Total Amount:</div>
-                                <div className="font-semibold text-gray-900">
-                                  ${item.expense.toFixed(2)}
-                                </div>
-                              </div>
-                            </div>
 
-                            {/* Item Breakdown */}
-                            {item.breakdownItems && (
-                              <div className="bg-white p-6 rounded-xl shadow border border-gray-200 min-h-48">
-                                <h3 className="text-lg font-semibold text-green-700 flex items-center mb-4 border-b pb-2">
-                                  <svg
-                                    className="h-5 w-5 mr-2 text-green-500"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                  >
-                                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                  Item Breakdown
-                                </h3>
-                                <div className="overflow-x-auto">
-                                  <table className="min-w-full text-sm divide-y divide-gray-200">
-                                    <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
-                                      <tr>
-                                        <th className="px-3 py-2 text-left">
-                                          ID
-                                        </th>
-                                        <th className="px-3 py-2 text-left">
-                                          Item
-                                        </th>
-                                        <th className="px-3 py-2 text-left">
-                                          Qty
-                                        </th>
-                                        <th className="px-3 py-2 text-right">
-                                          Price
-                                        </th>
-                                      </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-100">
-                                      {item.breakdownItems.map(
-                                        (breakdown, idx) => (
-                                          
-                                          <tr
-                                            key={idx}
-                                            className="hover:bg-gray-50"
-                                          >
-                                          <td className="px-3 py-2 font-medium text-gray-900">
-                                            {idx+1}
+                    {/* Expanded Content */}
+                    {expandedRows[item.id] && (
+                      <tr className="bg-blue-50">
+                        <td colSpan={7} className="px-4 py-3">
+                          <div className="ml-8 mr-14 pl-3">
+                          <div className="px-3 py-2 mb-2 text-sm font-medium rounded-sm bg-gray-50 border-l-4 border-blue-600 italic text-gray-800 shadow-sm">
+                            {item.detail || "-"}
+                          </div>
+                            {/* Breakdown Items */}
+                            {item.breakdownItems &&
+                            item.breakdownItems.length > 0 ? (
+                              <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                  <thead className="bg-gray-100">
+                                    <tr>
+                                    <th className="w-24 px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        ID
+                                      </th>
+                                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        Item
+                                      </th>
+                                      <th className="px-3 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        Qty
+                                      </th>
+                                      <th className="px-3 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        Unit Price
+                                      </th>
+                                      <th className="px-3 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        Total
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-gray-200 bg-white">
+                                    {item.breakdownItems.map(
+                                      (breakdown, idx) => (
+                                        <tr
+                                          key={idx}
+                                          className="hover:bg-gray-50 transition-colors"
+                                        >
+                                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">{idx+1}</td>
+                                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            <div className="flex items-center">
+                                              <div className="">
+                                                {breakdown.name}
+                                              </div>
+                                            </div>
                                           </td>
-                                            <td className="px-3 py-2 font-medium text-gray-900">
-                                              {breakdown.name}
-                                            </td>
-                                            <td className="px-3 py-2 text-gray-700">
+                                          <td className="px-3 py-3 whitespace-nowrap text-center text-sm text-gray-500">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                                               {breakdown.quantity}
-                                            </td>
-                                            <td className="px-3 py-2 text-right text-gray-700">
-                                              ${breakdown.price.toFixed(2)}
-                                            </td>
-                                          </tr>
-                                        )
-                                      )}
-                                    </tbody>
-                                  </table>
-                                </div>
+                                            </span>
+                                          </td>
+                                          <td className="px-3 py-3 whitespace-nowrap text-right text-sm text-gray-500">
+                                            ${breakdown.price.toFixed(2)}
+                                          </td>
+                                          <td className="px-3 py-3 whitespace-nowrap text-right text-sm font-medium text-gray-900">
+                                            $
+                                            {(
+                                              breakdown.price
+                                            ).toFixed(2)}
+                                          </td>
+                                        </tr>
+                                      )
+                                    )}
+                                    {/* Subtotal Row */}
+                                    <tr className="bg-gray-50">
+                                      <td
+                                        colSpan={4}
+                                        className="px-4 py-2 text-right text-sm font-medium text-gray-700"
+                                      >
+                                        Subtotal:
+                                      </td>
+                                      <td className="px-3 py-2 text-right text-sm font-bold text-gray-900">
+                                        $
+                                        {item.breakdownItems
+                                          .reduce(
+                                            (sum, item) =>
+                                              sum + item.price,
+                                            0
+                                          )
+                                          .toFixed(2)}
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : (
+                              <div className="text-center py-4 text-sm text-gray-500 italic">
+                                No breakdown items available
                               </div>
                             )}
                           </div>
