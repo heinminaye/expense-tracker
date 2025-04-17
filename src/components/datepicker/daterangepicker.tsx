@@ -252,7 +252,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
           // })}
           value={value || "Select date range"}
           onClick={() => setIsOpen(!isOpen)}
-          className="py-1 pr-5 border rounded cursor-pointer w-full text-center"
+          className="py-1.5 pl-3 border rounded cursor-pointer w-full text-left"
         />
         {/* Calendar icon */}
         <div
