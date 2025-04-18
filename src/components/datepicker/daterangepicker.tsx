@@ -3,11 +3,13 @@ import React, { useState, useRef, useEffect } from "react";
 interface DateRangePickerProps {
   value: string;
   onChange: (value: string) => void;
+  className?: string;
 }
 
 const DateRangePicker: React.FC<DateRangePickerProps> = ({
   value,
   onChange,
+  className = "",
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [startDate, setStartDate] = useState<string | null>(null);
@@ -223,16 +225,39 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
       days.push(
         <div
-          key={`day-${day}`}
-          className={`w-8 h-8 flex items-center text-sm justify-center rounded-full cursor-pointer
-            ${isStart || isEnd ? "bg-blue-600 text-white border-none" : ""}
-            ${isInRange ? "bg-blue-100 border-none" : ""}
-            ${isToday(day) ? "border border-blue-300" : ""}
-            hover:bg-gray-200 hover:text-black`}
-          onClick={() => handleDateClick(day)}
-        >
-          {day}
-        </div>
+  key={`day-${day}`}
+  className={`
+    w-full py-2 h-full flex items-center justify-center 
+    text-sm cursor-pointer rounded-lg relative
+    transition-colors duration-100 ease-in-out
+    ${isStart || isEnd 
+      ? "bg-blue-600 text-white font-medium" 
+      : ""}
+    ${isInRange && !(isStart || isEnd)
+      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200"
+      : ""}
+    ${isToday(day) && !isStart && !isEnd
+      ? "border border-blue-400 dark:border-blue-500"
+      : ""}
+    ${
+      !isStart && !isEnd && !isInRange
+        ? "text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+        : ""
+    }
+    ${
+      (isStart || isEnd) && isToday(day)
+        ? "border dark:border-blue-500"
+        : ""
+    }
+  `}
+  onClick={() => handleDateClick(day)}
+>
+  <div className="z-10">{day}</div>
+  {/* Range indicator for middle dates */}
+  {isInRange && !isStart && !isEnd && (
+    <div className="absolute inset-y-0 rounded-lg w-full bg-blue-100 dark:bg-blue-900/30 -z-10"></div>
+  )}
+</div>
       );
     }
 
@@ -240,28 +265,26 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   };
 
   return (
-    <div className="relative w-full z-20" ref={pickerRef}>
+    <div className={`relative w-full z-20 ${className}`} ref={pickerRef}>
       <div className="relative">
         <input
           type="text"
           readOnly
-          // {new Date(income.date).toLocaleDateString("en-US", {
-          //   month: "short",
-          //   day: "numeric",
-          //   year: "numeric",
-          // })}
           value={value || "Select date range"}
           onClick={() => setIsOpen(!isOpen)}
-          className="py-1.5 pl-3 border rounded cursor-pointer w-full text-left"
+          className={`py-2 pl-3 pr-10 border rounded-md cursor-pointer w-full text-left 
+            bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 
+            text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 
+            focus:border-blue-500 dark:focus:ring-blue-500 dark:focus:border-blue-500`}
         />
         {/* Calendar icon */}
         <div
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer"
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400"
           onClick={() => setIsOpen(!isOpen)}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 text-gray-500"
+            className="h-5 w-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -277,12 +300,14 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
       </div>
 
       {isOpen && (
-        <div className="absolute z-10 mt-1 bg-white border rounded-lg shadow-lg p-4 w-[600px]">
-          <div className="flex gap-6">
+        <div className={`absolute z-10 mt-1 bg-white dark:bg-gray-800 border 
+          border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 w-full 
+          sm:w-[580px] max-w-[calc(100vw-2rem)]`}>
+          <div className="flex flex-col sm:flex-row gap-6">
             {/* Preset buttons column */}
-            <div className="w-1/3 border-r">
-              <h3 className="font-medium mb-3 text-sm">Quick Select</h3>
-              <div className="space-y-2 mr-2">
+            <div className="sm:w-1/3 sm:border-r sm:border-gray-200 dark:sm:border-gray-700 sm:pr-4">
+              <h3 className="font-medium mb-3 text-sm text-gray-700 dark:text-gray-300">Quick Select</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-1 gap-2">
                 {presets.map((preset) => (
                   <PresetButton
                     key={preset.key}
@@ -296,24 +321,28 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
             </div>
 
             {/* Calendar column */}
-            <div className="w-2/3">
-              <div className="flex items-center justify-between mb-3 pr-4">
+            <div className="sm:w-2/3">
+              <div className="flex items-center justify-between mb-3">
                 <button
                   onClick={() => navigateMonth("prev")}
-                  className="p-2 hover:bg-gray-100 rounded-full"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-gray-700 dark:text-gray-300"
                 >
-                  &lt;
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
                 </button>
 
-                <div className="text-md font-medium">
+                <div className="text-md font-medium text-gray-800 dark:text-gray-200">
                   {months[currentMonth]} {currentYear}
                 </div>
 
                 <button
                   onClick={() => navigateMonth("next")}
-                  className="p-2 hover:bg-gray-100 rounded-full"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-gray-700 dark:text-gray-300"
                 >
-                  &gt;
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
                 </button>
               </div>
 
@@ -321,7 +350,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
                   <div
                     key={day}
-                    className="text-center text-sm w-8 pb-2 font-medium text-gray-500"
+                    className="text-center text-sm w-full pb-2 font-medium text-gray-500 dark:text-gray-400"
                   >
                     {day}
                   </div>
@@ -332,25 +361,26 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t flex justify-between items-center px-2">
-            <div className="text-sm flex">
-              {startDate && <div className="pr-2">Start: {formatDisplayDate(startDate)}</div>}
-              {endDate && <div>End: {formatDisplayDate(endDate)}</div>}
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-row justify-between items-center gap-0 px-2">
+            <div className="text-sm flex  flex-row gap-4 text-gray-700 dark:text-gray-300">
+              {startDate && <div>Start: <span className="font-medium">{formatDisplayDate(startDate)}</span></div>}
+              {endDate && <div>End: <span className="font-medium">{formatDisplayDate(endDate)}</span></div>}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 self-end sm:self-auto">
               <button
                 onClick={cancelSelection}
-                className="px-4 py-1 text-sm border rounded hover:bg-gray-100"
+                className="px-4 py-2 text-sm border rounded-md hover:bg-gray-100 dark:hover:bg-gray-700
+                  border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
               >
                 Cancel
               </button>
               <button
                 onClick={applyDateRange}
                 disabled={!startDate || !endDate}
-                className={`px-4 py-1 text-sm rounded ${
+                className={`px-4 py-2 text-sm rounded-md ${
                   !startDate || !endDate
-                    ? "bg-gray-200"
-                    : "bg-blue-500 text-white hover:bg-blue-600"
+                    ? "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                    : "bg-blue-500 hover:bg-blue-600 text-white"
                 }`}
               >
                 Apply
@@ -378,11 +408,12 @@ const PresetButton: React.FC<PresetButtonProps> = ({
 }) => (
   <button
     onClick={() => onClick(presetKey)}
-    className={`w-full p-2 text-left text-sm rounded ${
-      activePreset === presetKey
-        ? "bg-blue-100 text-blue-700"
-        : "hover:bg-gray-100"
-    }`}
+    className={`w-full p-2 text-left text-sm rounded-md transition-colors
+      ${
+        activePreset === presetKey
+          ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
+          : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+      }`}
   >
     {label}
   </button>
