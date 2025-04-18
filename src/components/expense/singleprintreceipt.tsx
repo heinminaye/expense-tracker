@@ -117,17 +117,21 @@ const SinglePrintReceipt: React.FC<SinglePrintReceiptProps> = ({ expense, onClos
               padding: 12px 15px;
               font-size: 16px;
             }
+            .expenses-table th:last-child {
+              text-align: right;
+            }
 
             .expenses-table td {
               padding: 12px 15px;
               border: 1px solid #dee2e6;
               vertical-align: top;
             }
-
             .expenses-table tr:nth-child(even) {
               background-color: #f8f9fa;
             }
-
+            .expenses-table td:last-child {
+              text-align: right;
+            }
             .id-badge {
               display: inline-block;
               background: #e9ecef;
@@ -264,7 +268,7 @@ const SinglePrintReceipt: React.FC<SinglePrintReceiptProps> = ({ expense, onClos
                 </div>
                 <div class="meta-card">
                   <div class="meta-label">Total Amount</div>
-                  <div class="meta-value">$${expense.expense.toLocaleString("en-US", {
+                  <div class="meta-value">${expense.expense.toLocaleString("en-US", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}</div>
@@ -290,7 +294,7 @@ const SinglePrintReceipt: React.FC<SinglePrintReceiptProps> = ({ expense, onClos
                   <td><span class="id-badge">${expense.id}</span></td>
                   <td>${expense.category}</td>
                   <td>${formatDate(expense.date)}</td>
-                  <td>$${expense.expense.toFixed(2)}</td>
+                  <td>${expense.expense.toLocaleString()}</td>
                 </tr>
                 ${
                   expense.detail
@@ -329,14 +333,14 @@ const SinglePrintReceipt: React.FC<SinglePrintReceiptProps> = ({ expense, onClos
                                       <td>${idx + 1}</td>
                                       <td>${b.name}</td>
                                       <td>${b.quantity}</td>
-                                      <td>$${(b.price).toFixed(2)}</td>
+                                      <td>${(b.price).toLocaleString()}</td>
                                     </tr>
                                   `
                                   )
                                   .join("")}
                                 <tr class="total-row">
                                   <td colspan="3" style="text-align: right;">Subtotal:</td>
-                                  <td style="text-align: right;">$${expense.expense.toFixed(2)}</td>
+                                  <td style="text-align: right;">${expense.expense.toLocaleString()}</td>
                                 </tr>
                               </tbody>
                             </table>
@@ -348,7 +352,7 @@ const SinglePrintReceipt: React.FC<SinglePrintReceiptProps> = ({ expense, onClos
                 }
                 <tr class="total-row">
                   <td colspan="3" style="text-align: right; padding-right: 20px;">Total Amount:</td>
-                  <td style="text-align: right;">${expense.expense.toFixed(2)}</td>
+                  <td style="text-align: right;">${expense.expense.toLocaleString()}</td>
                 </tr>
               </tbody>
             </table>

@@ -296,7 +296,7 @@ const Data: React.FC = () => {
               Total Expenses
             </div>
             <div className="text-xl font-bold text-blue-600">
-              ${totalAmount.toFixed(2)}
+              {totalAmount.toLocaleString()}
             </div>
           </div>
 
@@ -305,7 +305,7 @@ const Data: React.FC = () => {
               Remaining
             </div>
             <div className="text-xl font-bold text-green-600">
-              ${(100000).toFixed(2)}
+              {(100000).toLocaleString()}
             </div>
           </div>
 
@@ -407,7 +407,7 @@ const Data: React.FC = () => {
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-right">
                           <span className="font-medium text-sm text-gray-800">
-                            ${item.expense.toFixed(2)}
+                            {item.expense.toLocaleString()}
                           </span>
                         </td>
                         <td className="text-center">
@@ -537,7 +537,7 @@ const Data: React.FC = () => {
                                               </span>
                                             </td>
                                             <td className="px-3 py-3 whitespace-nowrap text-right text-sm font-medium text-gray-900">
-                                              ${breakdown.price.toFixed(2)}
+                                              {breakdown.price.toLocaleString()}
                                             </td>
                                           </tr>
                                         )
@@ -551,13 +551,12 @@ const Data: React.FC = () => {
                                           Subtotal:
                                         </td>
                                         <td className="px-3 py-2 text-right text-sm font-bold text-gray-900">
-                                          $
                                           {item.breakdownItems
                                             .reduce(
                                               (sum, item) => sum + item.price,
                                               0
                                             )
-                                            .toFixed(2)}
+                                            .toLocaleString()}
                                         </td>
                                       </tr>
                                     </tbody>

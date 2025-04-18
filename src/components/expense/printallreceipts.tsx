@@ -382,13 +382,7 @@ const PrintAllReceipts: React.FC<PrintAllReceiptsProps> = ({
                 </div>
                 <div class="meta-card">
                   <div class="meta-label">Total Amount</div>
-                  <div class="meta-value">$${totalAmount.toLocaleString(
-                    "en-US",
-                    {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }
-                  )}</div>
+                  <div class="meta-value">${totalAmount.toLocaleString()}</div>
                 </div>
                 <div class="meta-card">
                   <div class="meta-label">Items Count</div>
@@ -402,13 +396,7 @@ const PrintAllReceipts: React.FC<PrintAllReceiptsProps> = ({
                 <h3 class="category-title">Expense Categories</h3>
                 <div class="total-summary">
                   <span class="total-label">Grand Total:</span>
-                  <span class="total-amount">$${totalAmount.toLocaleString(
-                    "en-US",
-                    {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }
-                  )}</span>
+                  <span class="total-amount">${totalAmount.toLocaleString()}</span>
                 </div>
               </div>
               
@@ -425,10 +413,7 @@ const PrintAllReceipts: React.FC<PrintAllReceiptsProps> = ({
                         ).toFixed(1)}%</span>
                       </div>
                       <div class="category-amount">
-                        $${amount.toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                        ${amount.toLocaleString()}
                       </div>
                     </div>
                   `
@@ -454,7 +439,7 @@ const PrintAllReceipts: React.FC<PrintAllReceiptsProps> = ({
                       <td><span class="id-badge">${item.id}</span></td>
                       <td>${item.category}</td>
                       <td>${formatDate(item.date)}</td>
-                      <td>$${item.expense.toFixed(2)}</td>
+                      <td>${item.expense.toLocaleString()}</td>
                     </tr>
                     ${
                       item.detail
@@ -493,16 +478,14 @@ const PrintAllReceipts: React.FC<PrintAllReceiptsProps> = ({
                                           <td>${idx + 1}</td>
                                           <td>${b.name}</td>
                                           <td>${b.quantity}</td>
-                                          <td>$${b.price.toFixed(2)}</td>
+                                          <td>${b.price.toLocaleString()}</td>
                                         </tr>
                                       `
                                       )
                                       .join("")}
                                     <tr class="total-row">
                                       <td colspan="3" style="text-align: right;">Subtotal:</td>
-                                      <td style="text-align: right;">$${item.expense.toFixed(
-                                        2
-                                      )}</td>
+                                      <td style="text-align: right;">${item.expense.toLocaleString()}</td>
                                     </tr>
                                   </tbody>
                                 </table>
@@ -517,7 +500,7 @@ const PrintAllReceipts: React.FC<PrintAllReceiptsProps> = ({
                   .join("")}
                 <tr class="total-row">
                   <td colspan="3" style="text-align: right; padding-right: 20px;">Total Amount:</td>
-                  <td>$${totalAmount.toFixed(2)}</td>
+                  <td>${totalAmount.toLocaleString()}</td>
                 </tr>
               </tbody>
             </table>

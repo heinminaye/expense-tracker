@@ -110,9 +110,9 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
     }
 
     if (field === "price") {
-      const stringValue = String(value);
-      if (!/^\d*\.?\d{0,2}$/.test(stringValue)) return;
-      value = stringValue === "" ? 0 : parseFloat(stringValue);
+      if (typeof value === "string") {
+        value = parseFloat(value) || 0;
+      }
     }
 
     const updatedItems = [...breakdownItems];
@@ -139,6 +139,14 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
       breakdownItems: breakdownItems.filter((item) => item.name),
     };
     onSave(expenseToSave);
+  };
+
+  // Format number with commas (e.g., 1234567.89 → "1,234,567.89")
+  const formatNumberWithCommas = (num: number): string => {
+    return num.toLocaleString("en-US", {
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 0,
+    });
   };
 
   if (!show) return null;
@@ -348,7 +356,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                         }`}
                       >
                         <tr>
-                        <th
+                          <th
                             className={`px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${
                               darkMode ? "text-gray-300" : "text-gray-500"
                             }`}
@@ -399,7 +407,9 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                                 : "hover:bg-gray-50"
                             } transition-colors duration-150`}
                           >
-                            <td className="px-1 py-1 whitespace-nowrap text-center text-sm text-gray-500">{index+1}</td>
+                            <td className="px-1 py-1 whitespace-nowrap text-center text-sm text-gray-500">
+                              {index + 1}
+                            </td>
                             <td className="px-1 py-1 whitespace-nowrap">
                               <input
                                 type="text"
@@ -457,14 +467,26 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                                 </div>
                                 <input
                                   type="text"
-                                  value={item.price || ""}
-                                  onChange={(e) =>
+                                  value={
+                                    item.price !== undefined &&
+                                    item.price !== null &&
+                                    !isNaN(item.price)
+                                      ? formatNumberWithCommas(item.price)
+                                      : ""
+                                  }
+                                  onChange={(e) => {
+                                    const rawValue = e.target.value.replace(
+                                      /[^0-9.]/g,
+                                      ""
+                                    ); // Remove non-numeric chars (except ".")
+                                    const parsedValue =
+                                      parseFloat(rawValue) || 0; // Convert to number (default to 0)
                                     handleBreakdownItemChange(
                                       index,
                                       "price",
-                                      e.target.value
-                                    )
-                                  }
+                                      parsedValue
+                                    );
+                                  }}
                                   className={`block w-full pl-6 pr-1 py-2 rounded border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
                                     errors.breakdown && item.price <= 0
                                       ? "border-red-400 focus:ring-red-300"
@@ -472,7 +494,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                                       ? "border-gray-600 bg-gray-700 focus:border-blue-500"
                                       : "border-gray-300 focus:border-blue-500"
                                   }`}
-                                  placeholder="0.00"
+                                  placeholder="0"
                                   disabled={!newExpense.category}
                                 />
                               </div>
@@ -549,7 +571,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                       darkMode ? "text-blue-400" : "text-blue-700"
                     }`}
                   >
-                    ${newExpense.expense.toFixed(2)}
+                    {newExpense.expense.toLocaleString()}
                   </span>
                 </div>
               </div>
