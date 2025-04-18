@@ -229,11 +229,19 @@ const Data: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full p-4 bg-gray-50">
+    <div className="flex flex-col h-full md:min-h-[550px] min-h-[850px]  p-4 bg-gray-50">
       <div className="w-full h-full flex flex-col bg-white rounded-xl shadow-sm overflow-hidden">
         {/* Toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3 border-b bg-white dark:bg-zinc-900 dark:border-zinc-700">
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+          <div className="w-full sm:w-64">
+              <DateRangePicker value={dateRange} onChange={setDateRange} />
+            </div>
+             {/* Filter Button */}
+            <button className="flex items-center gap-1 px-3 py-2 border rounded-md text-sm text-gray-700 dark:text-white dark:border-zinc-600 hover:bg-gray-50 dark:hover:bg-zinc-800">
+              <FaFilter className="h-4 w-4" />
+              <span className="sm:inline">Filters</span>
+            </button>
             <div className="relative w-full sm:w-52">
               <FaSearch className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
               <input
@@ -244,16 +252,6 @@ const Data: React.FC = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-
-            <div className="w-full sm:w-64">
-              <DateRangePicker value={dateRange} onChange={setDateRange} />
-            </div>
-
-            {/* Filter Button */}
-            <button className="flex items-center gap-1 px-3 py-2 border rounded-md text-sm text-gray-700 dark:text-white dark:border-zinc-600 hover:bg-gray-50 dark:hover:bg-zinc-800">
-              <FaFilter className="h-4 w-4" />
-              <span className="sm:inline">Filters</span>
-            </button>
           </div>
 
           {/* Right section: Action buttons */}
@@ -322,9 +320,9 @@ const Data: React.FC = () => {
         </div>
 
         {/* Enhanced Nested Table */}
-        <div className="flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-          <div className="h-full overflow-auto pb-14">
-            <table className="w-full">
+        <div className="flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white mx-4 mb-4 shadow-sm">
+          <div className={`h-full overflow-auto ${paginatedItems.length > 0 ? "pb-14" : ""}`}>
+            <table className={`w-full ${paginatedItems.length > 0 ? "h-auto" : "h-full"}`}>
               <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
                 <tr>
                   <th className="w-12 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"></th>

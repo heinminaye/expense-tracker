@@ -434,7 +434,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                                   )
                                 }
                                 pattern="^\d+[\u1000-\u109Fa-zA-Z]*$"
-                                className={`w-32 p-2 leading-3 rounded border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
+                                className={`w-20 md:w-24 p-2 leading-3 rounded border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
                                   darkMode
                                     ? "border-gray-600 bg-gray-700 focus:border-blue-500"
                                     : "border-gray-300 focus:border-blue-500"
