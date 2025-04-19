@@ -237,11 +237,6 @@ const Data: React.FC = () => {
           <div className="w-full sm:w-64">
               <DateRangePicker value={dateRange} onChange={setDateRange} />
             </div>
-             {/* Filter Button */}
-            <button className="flex items-center gap-1 px-3 py-2 border rounded-md text-sm text-gray-700 dark:text-white dark:border-zinc-600 hover:bg-gray-50 dark:hover:bg-zinc-800">
-              <FaFilter className="h-4 w-4" />
-              <span className="sm:inline">Filters</span>
-            </button>
             <div className="relative w-full sm:w-52">
               <FaSearch className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
               <input
@@ -252,6 +247,11 @@ const Data: React.FC = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+            <button className="flex items-center gap-1 px-3 py-2 border rounded-md text-sm text-gray-700 dark:text-white dark:border-zinc-600 hover:bg-gray-50 dark:hover:bg-zinc-800">
+              <FaFilter className="h-4 w-4" />
+              <span className="sm:inline">Filters</span>
+            </button>
+           
           </div>
 
           {/* Right section: Action buttons */}

@@ -8,7 +8,6 @@ interface ExpenseModalProps {
   onSave: (expense: Omit<ExpenseItem, "id">) => void;
   initialData?: Omit<ExpenseItem, "id">;
   isEditMode?: boolean;
-  darkMode?: boolean;
 }
 
 const ExpenseModal: React.FC<ExpenseModalProps> = ({
@@ -23,7 +22,6 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
     breakdownItems: [{ name: "", price: 0, quantity: 1 }],
   },
   isEditMode = false,
-  darkMode = false,
 }) => {
   const [newExpense, setNewExpense] =
     useState<Omit<ExpenseItem, "id">>(initialData);
@@ -32,6 +30,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const modalRef = useRef<HTMLDivElement>(null);
+  
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -152,33 +151,19 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
   if (!show) return null;
 
   return (
-    <div
-      className={`fixed inset-0 z-30 flex items-center justify-center p-4 transition-opacity duration-300 ${
-        darkMode ? "bg-black bg-opacity-70" : "bg-black bg-opacity-70"
-      }`}
-    >
+    <div className="fixed inset-0 z-30 flex items-center justify-center p-4 transition-opacity duration-300 bg-black bg-opacity-70">
       <div
-        className={`rounded-xl fixed shadow-xl z-40 w-full max-w-4xl flex flex-col min-h-[80vh] max-h-[80vh] overflow-hidden transition-all duration-300 transform ${
-          darkMode ? "bg-gray-800 text-white" : "bg-white text-gray-800"
-        }`}
+        className="rounded-xl fixed shadow-xl z-40 w-full max-w-4xl flex flex-col min-h-[80vh] max-h-[80vh] overflow-hidden transition-all duration-300 transform bg-white text-gray-800 dark:bg-gray-800 dark:text-white"
         ref={modalRef}
       >
         {/* Header */}
-        <div
-          className={`p-4 border-b flex justify-between items-center sticky top-0 ${
-            darkMode
-              ? "border-gray-700 bg-gray-800"
-              : "border-gray-200 bg-white"
-          }`}
-        >
+        <div className="p-4 border-b flex justify-between items-center sticky top-0 border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
           <h2 className="text-xl font-bold">
             {isEditMode ? "Edit Expense" : "Add New Expense"}
           </h2>
           <button
             onClick={onClose}
-            className={`p-1 rounded-full transition-colors duration-200 ${
-              darkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"
-            }`}
+            className="p-1 rounded-full transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
             aria-label="Close modal"
           >
             <svg
@@ -208,11 +193,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
               <div className="flex flex-col col-span-1 h-full space-y-4">
                 {/* Category */}
                 <div className="space-y-1">
-                  <label
-                    className={`block text-sm font-medium ${
-                      darkMode ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Category <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -227,9 +208,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                       className={`appearance-none w-full py-2 px-3 rounded-md border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
                         errors.category
                           ? "border-red-400 focus:ring-red-300"
-                          : darkMode
-                          ? "border-gray-600 bg-gray-700 focus:border-blue-500"
-                          : "border-gray-300 focus:border-blue-500"
+                          : "border-gray-300 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700"
                       }`}
                     >
                       <option value="">Select a category</option>
@@ -264,17 +243,12 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
                 {/* Date */}
                 <div className="z-50 space-y-1">
-                  <label
-                    className={`block text-sm font-medium ${
-                      darkMode ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Date <span className="text-red-500">*</span>
                   </label>
                   <SingleDatePicker
                     value={newExpense.date}
                     onChange={(date) => setNewExpense({ ...newExpense, date })}
-                    darkMode={darkMode}
                   />
                   {errors.date && (
                     <p className="mt-1 text-xs text-red-500">{errors.date}</p>
@@ -283,11 +257,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
                 {/* Notes - Takes remaining space */}
                 <div className="flex-1 flex flex-col min-h-[150px]">
-                  <label
-                    className={`block text-sm font-medium mb-1 ${
-                      darkMode ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                     General Notes
                   </label>
                   <div className="flex-1">
@@ -296,11 +266,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                       onChange={(e) =>
                         setNewExpense({ ...newExpense, detail: e.target.value })
                       }
-                      className={`w-full h-full resize-none py-2 px-3 rounded-md border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
-                        darkMode
-                          ? "bg-gray-700 border-gray-600 focus:border-blue-500"
-                          : "border-gray-300 focus:border-blue-500"
-                      }`}
+                      className="w-full h-full resize-none py-2 px-3 rounded-md border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm border-gray-300 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
                       placeholder="Additional notes about this expense"
                     />
                   </div>
@@ -310,11 +276,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
               {/* Right Side - Items Breakdown */}
               <div className="flex flex-col col-span-2 h-full">
                 <div className="flex justify-between items-center mb-1">
-                  <label
-                    className={`block text-sm font-medium ${
-                      darkMode ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Items Breakdown
                   </label>
                   <button
@@ -323,12 +285,8 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                     disabled={!newExpense.category}
                     className={`flex items-center px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
                       newExpense.category
-                        ? darkMode
-                          ? "bg-blue-600 text-white hover:bg-blue-700"
-                          : "bg-blue-600 text-white hover:bg-blue-700"
-                        : darkMode
-                        ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        : "bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-700"
                     }`}
                   >
                     <svg
@@ -349,65 +307,31 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
                 <div className="flex-1 overflow-hidden flex flex-col">
                   <div className="overflow-auto max-h-[280px] flex-1">
-                    <table className="min-w-full divide-y text-md">
-                      <thead
-                        className={`sticky top-0 z-10 ${
-                          darkMode ? "bg-gray-700" : "bg-gray-50"
-                        }`}
-                      >
+                    <table className="min-w-full divide-y dark:divide-gray-500 text-md">
+                      <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-700">
                         <tr>
-                          <th
-                            className={`px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${
-                              darkMode ? "text-gray-300" : "text-gray-500"
-                            }`}
-                          >
+                          <th className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                             ID
                           </th>
-                          <th
-                            className={`px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${
-                              darkMode ? "text-gray-300" : "text-gray-500"
-                            }`}
-                          >
+                          <th className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                             Item
                           </th>
-                          <th
-                            className={`px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${
-                              darkMode ? "text-gray-300" : "text-gray-500"
-                            }`}
-                          >
+                          <th className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                             Qty
                           </th>
-                          <th
-                            className={`px-2 py-2 text-left text-xs font-medium uppercase tracking-wider ${
-                              darkMode ? "text-gray-300" : "text-gray-500"
-                            }`}
-                          >
+                          <th className="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                             Price
                           </th>
-                          <th
-                            className={`text-right text-xs font-medium uppercase tracking-wider ${
-                              darkMode ? "text-gray-300" : "text-gray-500"
-                            }`}
-                          ></th>
+                          <th className="text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300"></th>
                         </tr>
                       </thead>
-                      <tbody
-                        className={`divide-y ${
-                          darkMode
-                            ? "divide-gray-700 bg-gray-800"
-                            : "divide-gray-200 bg-white"
-                        }`}
-                      >
+                      <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
                         {breakdownItems.map((item, index) => (
                           <tr
                             key={index}
-                            className={`${
-                              darkMode
-                                ? "hover:bg-gray-700"
-                                : "hover:bg-gray-50"
-                            } transition-colors duration-150`}
+                            className="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150"
                           >
-                            <td className="px-1 py-1 whitespace-nowrap text-center text-sm text-gray-500">
+                            <td className="px-1 py-1 whitespace-nowrap text-center text-sm text-gray-500 dark:text-gray-400">
                               {index + 1}
                             </td>
                             <td className="px-1 py-1 whitespace-nowrap">
@@ -424,9 +348,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                                 className={`w-full p-2 leading-3 rounded border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
                                   errors.breakdown && !item.name
                                     ? "border-red-400 focus:ring-red-300"
-                                    : darkMode
-                                    ? "border-gray-600 bg-gray-700 focus:border-blue-500"
-                                    : "border-gray-300 focus:border-blue-500"
+                                    : "border-gray-300 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700"
                                 }`}
                                 placeholder="Item name"
                                 disabled={!newExpense.category}
@@ -444,24 +366,14 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                                   )
                                 }
                                 pattern="^\d+[\u1000-\u109Fa-zA-Z]*$"
-                                className={`w-20 md:w-24 p-2 leading-3 rounded border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
-                                  darkMode
-                                    ? "border-gray-600 bg-gray-700 focus:border-blue-500"
-                                    : "border-gray-300 focus:border-blue-500"
-                                }`}
+                                className="w-20 md:w-24 p-2 leading-3 rounded border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm border-gray-300 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700"
                                 disabled={!newExpense.category}
                               />
                             </td>
                             <td className="px-1 py-1 whitespace-nowrap">
                               <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
-                                  <span
-                                    className={`text-sm ${
-                                      darkMode
-                                        ? "text-gray-400"
-                                        : "text-gray-500"
-                                    }`}
-                                  >
+                                  <span className="text-sm text-gray-500 dark:text-gray-400">
                                     $
                                   </span>
                                 </div>
@@ -478,21 +390,19 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                                     const rawValue = e.target.value.replace(
                                       /[^0-9.]/g,
                                       ""
-                                    ); // Remove non-numeric chars (except ".")
+                                    );
                                     const parsedValue =
-                                      parseFloat(rawValue) || 0; // Convert to number (default to 0)
+                                      parseFloat(rawValue) || 0;
                                     handleBreakdownItemChange(
                                       index,
                                       "price",
                                       parsedValue
                                     );
                                   }}
-                                  className={`block w-full pl-6 pr-1 py-2 rounded border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
+                                  className={`block w-full pl-6 pr-1 py-2 leading-3 rounded border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
                                     errors.breakdown && item.price <= 0
                                       ? "border-red-400 focus:ring-red-300"
-                                      : darkMode
-                                      ? "border-gray-600 bg-gray-700 focus:border-blue-500"
-                                      : "border-gray-300 focus:border-blue-500"
+                                      : "border-gray-300 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700"
                                   }`}
                                   placeholder="0"
                                   disabled={!newExpense.category}
@@ -504,14 +414,10 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                                 type="button"
                                 onClick={() => handleRemoveBreakdownItem(index)}
                                 disabled={!newExpense.category}
-                                className={`p-1 rounded transition-all duration-200 ${
+                                className={`p-1 pr-2 rounded transition-all duration-200 ${
                                   !newExpense.category
-                                    ? darkMode
-                                      ? "text-gray-600 cursor-not-allowed"
-                                      : "text-gray-300 cursor-not-allowed"
-                                    : darkMode
-                                    ? "text-red-400 hover:text-red-300 hover:bg-gray-700"
-                                    : "text-red-600 hover:text-red-800 hover:bg-red-50"
+                                    ? "text-gray-300 cursor-not-allowed dark:text-gray-600"
+                                    : "text-red-600 hover:text-red-800 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-gray-700"
                                 }`}
                                 aria-label="Remove item"
                               >
@@ -544,33 +450,13 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
           {/* Total and Submit/Cancel */}
           <div className="sticky bottom-0">
-            <div
-              className={`p-3 border-t ${
-                darkMode
-                  ? "border-gray-700 bg-gray-800"
-                  : "border-gray-200 bg-white"
-              }`}
-            >
-              <div
-                className={`p-2 rounded border mb-3 ${
-                  darkMode
-                    ? "bg-gray-700 border-gray-600"
-                    : "bg-blue-50 border-blue-200"
-                }`}
-              >
+            <div className="p-3 border-t border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+              <div className="p-2 rounded border mb-3 bg-blue-50 border-blue-200 dark:bg-gray-700 dark:border-gray-600">
                 <div className="flex justify-between items-center">
-                  <span
-                    className={`text-sm font-semibold ${
-                      darkMode ? "text-gray-300" : "text-gray-800"
-                    }`}
-                  >
+                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-300">
                     Total
                   </span>
-                  <span
-                    className={`text-base font-bold ${
-                      darkMode ? "text-blue-400" : "text-blue-700"
-                    }`}
-                  >
+                  <span className="text-base font-bold text-blue-700 dark:text-blue-400">
                     {newExpense.expense.toLocaleString()}
                   </span>
                 </div>
@@ -580,21 +466,13 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className={`px-3 py-2 rounded focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-200 text-sm ${
-                    darkMode
-                      ? "bg-gray-700 text-white hover:bg-gray-600 focus:ring-gray-500 focus:ring-offset-gray-800"
-                      : "bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500"
-                  }`}
+                  className="px-3 py-2 rounded focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-200 text-sm bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-500 dark:focus:ring-offset-gray-800"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className={`px-4 py-2 rounded focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-200 text-sm ${
-                    darkMode
-                      ? "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 focus:ring-offset-gray-800"
-                      : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
-                  }`}
+                  className="px-4 py-2 rounded focus:outline-none focus:ring-1 focus:ring-offset-1 transition-all duration-200 text-sm bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 dark:focus:ring-offset-gray-800"
                 >
                   {isEditMode ? "Save Expense" : "Add Expense"}
                 </button>

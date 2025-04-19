@@ -3,20 +3,22 @@ import React, { useState, useRef, useEffect } from "react";
 interface SingleDatePickerProps {
   value: string;
   onChange: (value: string) => void;
-  darkMode?: boolean;
   className?: string;
 }
 
 const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
   value,
   onChange,
-  darkMode = false,
   className = "",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [currentMonth, setCurrentMonth] = useState<number>(new Date().getMonth());
-  const [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear());
+  const [currentMonth, setCurrentMonth] = useState<number>(
+    new Date().getMonth()
+  );
+  const [currentYear, setCurrentYear] = useState<number>(
+    new Date().getFullYear()
+  );
   const pickerRef = useRef<HTMLDivElement>(null);
 
   const formatDate = (date: Date): string => {
@@ -48,7 +50,10 @@ const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+      if (
+        pickerRef.current &&
+        !pickerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -98,47 +103,38 @@ const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full py-2 px-3 border rounded-md text-left flex items-center justify-between transition-colors duration-200 ${
-          darkMode
-            ? "bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
-            : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-        } ${className}`}
+        className="w-full py-2 px-3 border rounded-md text-left flex items-center justify-between transition-colors duration-200 bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-700  dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700"
       >
-        <span>{selectedDate ? formatDisplayDate(selectedDate) : "Select a date"}</span>
+        <span>
+          {selectedDate ? formatDisplayDate(selectedDate) : "Select a date"}
+        </span>
         <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 text-gray-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-5 w-5 dark:text-gray-400 text-gray-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
       </button>
 
       {isOpen && (
-        <div
-          className={`absolute z-20 mt-1 rounded-lg shadow-lg px-2 py-3 w-64 ${
-            darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-          }`}
-        >
-          <div
-            className={`flex justify-between items-center mb-2 mx-1 ${
-              darkMode ? "text-white" : "text-gray-700"
-            }`}
-          >
+        <div className="absolute z-20 mt-1 rounded-lg shadow-lg px-2 py-3 w-64 bg-white dark:bg-gray-800 border 
+          border-gray-200 dark:border-gray-700">
+          <div className="flex justify-between items-center mb-2 mx-1 dark:text-gray-100  text-gray-700">
             <button
               onClick={() => navigateMonth("prev")}
-              className="p-1 text-sm items-center flex justify-center rounded-md hover:bg-gray-200 transition-colors duration-200"
+              className="p-1 text-sm items-center flex justify-center rounded-md transition-colors duration-200 hover:bg-gray-200 text-gray-600  dark:hover:bg-gray-700 dark:text-gray-300"
             >
               &lt;
             </button>
-            <span className="font-medium  text-sm">
+            <span className="font-medium text-sm">
               {new Date(currentYear, currentMonth).toLocaleString("en-US", {
                 month: "short",
                 year: "numeric",
@@ -146,17 +142,13 @@ const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
             </span>
             <button
               onClick={() => navigateMonth("next")}
-              className="p-1 text-sm items-center flex justify-center rounded-md hover:bg-gray-200  transition-colors duration-200"
+              className="p-1 text-sm items-center flex justify-center rounded-md transition-colors duration-200 hover:bg-gray-200 text-gray-600 dark:hover:bg-gray-700 dark:text-gray-300 "
             >
               &gt;
             </button>
           </div>
 
-          <div
-            className={`grid grid-cols-7 gap-1 text-xs mb-2 ${
-              darkMode ? "text-gray-400" : "text-gray-500"
-            }`}
-          >
+          <div className="grid grid-cols-7 gap-1 text-xs mb-2 dark:text-gray-400 text-gray-500">
             {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
               <div key={day} className="text-center font-medium">
                 {day}
@@ -179,15 +171,15 @@ const SingleDatePicker: React.FC<SingleDatePickerProps> = ({
                   type="button"
                   key={day}
                   onClick={() => handleDayClick(day)}
-                  className={`w-6 h-6 mx-1 flex items-center text-xs justify-center rounded-full cursor-pointer transition-colors duration-200 ${
-                    darkMode
-                      ? isSelected
-                        ? "bg-blue-600 text-white"
-                        : "hover:bg-gray-700 text-white"
-                      : isSelected
-                      ? "bg-blue-500 text-white"
-                      : "hover:bg-gray-200 text-gray-700"
-                  } ${isToday(day) ? "border border-blue-400" : ""}`}
+                  className={`w-full py-1.5 h-full flex items-center text-xs justify-center rounded-lg cursor-pointer transition-colors duration-200 ${
+                    isSelected
+                      ? "bg-blue-500 text-white dark:bg-blue-600"
+                      : "hover:bg-gray-200 text-gray-700 dark:hover:bg-gray-700 dark:text-gray-200"
+                  } ${
+                    isToday(day)
+                      ? "dark:border dark:border-blue-400 border border-blue-500"
+                      : ""
+                  }`}
                 >
                   {day}
                 </button>

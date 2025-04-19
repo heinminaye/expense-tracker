@@ -89,7 +89,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
     setStartDate(startStr);
     setEndDate(endStr);
     setActivePreset(presetName);
-    onChange(`${formatDisplayDate(startStr)} to ${formatDisplayDate(endStr)}`);
+    // onChange(`${formatDisplayDate(startStr)} to ${formatDisplayDate(endStr)}`);
   };
 
   const presets = [
@@ -252,7 +252,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   `}
   onClick={() => handleDateClick(day)}
 >
-  <div className="z-10">{day}</div>
+  <div className="z-10 text-sm">{day}</div>
   {/* Range indicator for middle dates */}
   {isInRange && !isStart && !isEnd && (
     <div className="absolute inset-y-0 rounded-lg w-full bg-blue-100 dark:bg-blue-900/30 -z-10"></div>
@@ -272,9 +272,9 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
           readOnly
           value={value || "Select date range"}
           onClick={() => setIsOpen(!isOpen)}
-          className={`py-2 pl-3 pr-10 border rounded-md cursor-pointer w-full text-left 
+          className={`py-2 pl-3 pr-10 border rounded-md text-sm cursor-pointer w-full text-left 
             bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 
-            text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 
+            text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-blue-500 
             focus:border-blue-500 dark:focus:ring-blue-500 dark:focus:border-blue-500`}
         />
         {/* Calendar icon */}
