@@ -273,7 +273,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
           value={value || "Select date range"}
           onClick={() => setIsOpen(!isOpen)}
           className={`py-2 pl-3 pr-10 border rounded-md text-sm cursor-pointer w-full text-left 
-            bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 
+            bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 
             text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-blue-500 
             focus:border-blue-500 dark:focus:ring-blue-500 dark:focus:border-blue-500`}
         />

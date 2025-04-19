@@ -82,38 +82,27 @@ const Data: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const filteredItems = expenses.filter((item) => {
-    // Filter by date range
     if (dateRange) {
       const [startDateStr, endDateStr] = dateRange.split(" to ");
-
-      // Create date objects at the start and end of the day
       const startDate = new Date(startDateStr);
       startDate.setHours(0, 0, 0, 0);
-
       const endDate = new Date(endDateStr);
       endDate.setHours(23, 59, 59, 999);
-
       const itemDate = new Date(item.date);
-      itemDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
-
+      itemDate.setHours(12, 0, 0, 0);
       return itemDate >= startDate && itemDate <= endDate;
     }
-
-    // Filter by search term
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       const matchesMain =
         item.category.toLowerCase().includes(term) ||
         item.detail?.toLowerCase().includes(term) ||
         item.id.toString().includes(term);
-
       const matchesBreakdown = item.breakdownItems?.some((breakdown) =>
         breakdown.name.toLowerCase().includes(term)
       );
-
       return matchesMain || matchesBreakdown;
     }
-
     return true;
   });
 
@@ -121,7 +110,6 @@ const Data: React.FC = () => {
     setCurrentPage(1);
   }, [searchTerm, dateRange, filteredItems.length]);
 
-  // Calculate pagination values
   const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
   const paginatedItems = filteredItems.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
@@ -229,34 +217,32 @@ const Data: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full md:min-h-[550px] min-h-[850px]  p-4 bg-gray-50">
-      <div className="w-full h-full flex flex-col bg-white rounded-xl shadow-sm overflow-hidden">
+    <div className="flex flex-col h-full md:min-h-[550px] min-h-[850px] p-4 bg-gray-50 dark:bg-gray-900">
+      <div className="w-full h-full flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3 border-b bg-white dark:bg-zinc-900 dark:border-zinc-700">
+        <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3 border-b bg-white dark:bg-slate-800 dark:border-gray-700">
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-          <div className="w-full sm:w-64">
+            <div className="w-full sm:w-64">
               <DateRangePicker value={dateRange} onChange={setDateRange} />
             </div>
             <div className="relative w-full sm:w-52">
-              <FaSearch className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              <FaSearch className="absolute left-3 top-2.5 h-4 w-4 text-gray-400 " />
               <input
                 type="text"
                 placeholder="Search..."
-                className="w-full pl-9 pr-3 py-2 rounded-md text-sm bg-white dark:bg-zinc-800 text-gray-800 dark:text-white border border-gray-300 dark:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-9 pr-3 py-2 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <button className="flex items-center gap-1 px-3 py-2 border rounded-md text-sm text-gray-700 dark:text-white dark:border-zinc-600 hover:bg-gray-50 dark:hover:bg-zinc-800">
-              <FaFilter className="h-4 w-4" />
+            <button className="flex items-center gap-1 px-3 py-2 border rounded-md text-sm text-gray-700 dark:text-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
+              <FaFilter className="h-4 w-4 text-gray-400 " />
               <span className="sm:inline">Filters</span>
             </button>
-           
           </div>
 
           {/* Right section: Action buttons */}
           <div className="flex flex-wrap items-center gap-2 justify-end w-full lg:w-auto">
-            {/* Add Expense */}
             <button
               onClick={() => setShowModal(true)}
               className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-all"
@@ -265,7 +251,6 @@ const Data: React.FC = () => {
               <span className="sm:inline">Add</span>
             </button>
 
-            {/* Print All */}
             <button
               onClick={() => setShowPrintAll(true)}
               className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 transition-all"
@@ -274,7 +259,6 @@ const Data: React.FC = () => {
               <span className="sm:inline">Print All</span>
             </button>
 
-            {/* Print Selected */}
             {selectedItems.length > 0 && (
               <button
                 onClick={handlePrintSelected}
@@ -291,42 +275,42 @@ const Data: React.FC = () => {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-4 py-4">
-          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 shadow-sm hover:shadow-md transition duration-300">
-            <div className="text-xs font-semibold text-blue-700 mb-1">
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition duration-300">
+            <div className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">
               Total Expenses
             </div>
-            <div className="text-xl font-bold text-blue-600">
+            <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
               {totalAmount.toLocaleString()}
             </div>
           </div>
 
-          <div className="bg-green-50 p-3 rounded-lg border border-green-200 shadow-sm hover:shadow-md transition duration-300">
-            <div className="text-xs font-semibold text-green-700 mb-1">
+          <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800 shadow-sm hover:shadow-md transition duration-300">
+            <div className="text-xs font-semibold text-green-700 dark:text-green-300 mb-1">
               Remaining
             </div>
-            <div className="text-xl font-bold text-green-600">
+            <div className="text-xl font-bold text-green-600 dark:text-green-400">
               {(100000).toLocaleString()}
             </div>
           </div>
 
-          <div className="bg-purple-50 p-3 rounded-lg border border-purple-200 shadow-sm hover:shadow-md transition duration-300">
-            <div className="text-xs font-semibold text-purple-700 mb-1">
+          <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg border border-purple-200 dark:border-purple-800 shadow-sm hover:shadow-md transition duration-300">
+            <div className="text-xs font-semibold text-purple-700 dark:text-purple-300 mb-1">
               Number of Items
             </div>
-            <div className="text-xl font-bold text-purple-600">
+            <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
               {filteredItems.length}
             </div>
           </div>
         </div>
 
         {/* Enhanced Nested Table */}
-        <div className="flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white mx-4 mb-4 shadow-sm">
+        <div className="flex-1 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 mx-4 mb-4 shadow-sm">
           <div className={`h-full overflow-auto ${paginatedItems.length > 0 ? "pb-14" : ""}`}>
             <table className={`w-full ${paginatedItems.length > 0 ? "h-auto" : "h-full"}`}>
-              <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
+              <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10 shadow-sm">
                 <tr>
-                  <th className="w-12 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"></th>
-                  <th className="w-12 px-4 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="w-12 py-4 text-left text-xs font-medium text-gray-700 dark:text-gray-200 uppercase tracking-wider"></th>
+                  <th className="w-12 px-4 py-4 text-left text-xs font-medium text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                     <input
                       type="checkbox"
                       checked={
@@ -334,41 +318,41 @@ const Data: React.FC = () => {
                         filteredItems.length > 0
                       }
                       onChange={toggleSelectAll}
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-slate-800"
                     />
                   </th>
-                  <th className="w-14 px-4 py-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="w-14 px-4 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                     ID
                   </th>
-                  <th className="px-4 py-4 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                     Expense
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-4 py-4 text-right text-sm font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-right text-sm font-medium text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="px-4 py-4 text-center text-sm font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-center text-sm font-medium text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-slate-800">
                 {paginatedItems.length > 0 ? (
                   paginatedItems.map((item) => (
                     <React.Fragment key={item.id}>
                       {/* Main Row */}
                       <tr
-                        className={`hover:bg-gray-50 transition-colors cursor-pointer ${
-                          expandedRows[item.id] ? "bg-blue-50" : "bg-white"
+                        className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer ${
+                          expandedRows[item.id] ? "bg-blue-50 dark:bg-blue-900/20" : "bg-white dark:bg-slate-800"
                         }`}
                         onClick={() => toggleRowExpand(item.id)}
                       >
                         <td className="whitespace-nowrap text-center items-center px-4">
                           <button
                             onClick={() => toggleRowExpand(item.id)}
-                            className="text-gray-500 h-3 w-4 text-sm cursor-pointer"
+                            className="text-gray-500 dark:text-gray-400 h-3 w-4 text-sm cursor-pointer"
                           >
                             {expandedRows[item.id] ? (
                               <FaChevronDown />
@@ -383,22 +367,22 @@ const Data: React.FC = () => {
                             checked={selectedItems.includes(item.id)}
                             onChange={(e) => toggleSelectItem(item.id, e)}
                             onClick={(e) => e.stopPropagation()}
-                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-slate-800"
                           />
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">
+                        <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
                           {item.id}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3">
                           <div className="flex items-center">
                             <div>
-                              <div className="font-medium text-sm text-gray-900">
+                              <div className="font-medium text-sm text-gray-900 dark:text-white">
                                 {item.category}
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-700">
+                        <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300">
                           {new Date(item.date).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
@@ -406,7 +390,7 @@ const Data: React.FC = () => {
                           })}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-right">
-                          <span className="font-medium text-sm text-gray-800">
+                          <span className="font-medium text-sm text-gray-800 dark:text-white">
                             {item.expense.toLocaleString()}
                           </span>
                         </td>
@@ -417,7 +401,7 @@ const Data: React.FC = () => {
                                 e.stopPropagation();
                                 setEditingItem(item);
                               }}
-                              className="text-blue-600 hover:text-blue-800 p-1 rounded-lg hover:bg-blue-100 transition-colors"
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
                               title="Edit"
                             >
                               <svg
@@ -440,7 +424,7 @@ const Data: React.FC = () => {
                                 e.stopPropagation();
                                 setItemToPrint(item);
                               }}
-                              className="text-green-600 hover:text-green-800 p-1 rounded-lg hover:bg-green-100 transition-colors"
+                              className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 p-1 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
                               title="Print"
                             >
                               <svg
@@ -463,7 +447,7 @@ const Data: React.FC = () => {
                                 e.stopPropagation();
                                 handleDeleteExpense(item.id);
                               }}
-                              className="text-red-600 hover:text-red-800 p-1 rounded-lg hover:bg-red-100 transition-colors"
+                              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
                               title="Delete"
                             >
                               <svg
@@ -487,70 +471,70 @@ const Data: React.FC = () => {
 
                       {/* Expanded Content */}
                       {expandedRows[item.id] && (
-                        <tr className="bg-blue-50">
+                        <tr className="bg-blue-50 dark:bg-blue-900/20">
                           <td colSpan={7} className="px-4 py-3">
                             <div className="ml-8 mr-14 pl-3">
-                              <div className="px-3 py-2 mb-2 text-sm font-medium rounded-sm bg-gray-50 border-l-4 border-blue-600 italic text-gray-800 shadow-sm">
+                              <div className="px-3 py-2 mb-2 text-sm font-medium rounded-sm bg-gray-50 dark:bg-gray-700 border-l-4 border-blue-600 italic text-gray-800 dark:text-white shadow-sm">
                                 <strong>Notes:</strong> {item.detail || "-"}
                               </div>
                               {/* Breakdown Items */}
                               {item.breakdownItems &&
                               item.breakdownItems.length > 0 ? (
-                                <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm">
-                                  <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-100">
+                                <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                    <thead className="bg-gray-100 dark:bg-gray-700">
                                       <tr>
-                                        <th className="w-24 px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        <th className="w-24 px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                                           ID
                                         </th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                                           Item
                                         </th>
-                                        <th className="px-3 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        <th className="px-3 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                                           Qty
                                         </th>
-                                        <th className="px-3 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        <th className="px-3 py-3 text-right text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                                           Total
                                         </th>
                                       </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-200 bg-white">
+                                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-slate-800">
                                       {item.breakdownItems.map(
                                         (breakdown, idx) => (
                                           <tr
                                             key={idx}
-                                            className="hover:bg-gray-50 transition-colors"
+                                            className="hover:bg-gray-50 dark:hover:bg-slate-900 transition-colors"
                                           >
-                                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                                               {idx + 1}
                                             </td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                                               <div className="flex items-center">
                                                 <div className="">
                                                   {breakdown.name}
                                                 </div>
                                               </div>
                                             </td>
-                                            <td className="px-3 py-3 whitespace-nowrap text-center text-sm text-gray-500">
-                                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            <td className="px-3 py-3 whitespace-nowrap text-center text-sm text-gray-500 dark:text-gray-400">
+                                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white">
                                                 {breakdown.quantity}
                                               </span>
                                             </td>
-                                            <td className="px-3 py-3 whitespace-nowrap text-right text-sm font-medium text-gray-900">
+                                            <td className="px-3 py-3 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-white">
                                               {breakdown.price.toLocaleString()}
                                             </td>
                                           </tr>
                                         )
                                       )}
                                       {/* Subtotal Row */}
-                                      <tr className="bg-gray-50">
+                                      <tr className="bg-gray-50 dark:bg-gray-700">
                                         <td
                                           colSpan={3}
-                                          className="px-4 py-2 text-right text-sm font-medium text-gray-700"
+                                          className="px-4 py-2 text-right text-sm font-medium text-gray-700 dark:text-gray-200"
                                         >
                                           Subtotal:
                                         </td>
-                                        <td className="px-3 py-2 text-right text-sm font-bold text-gray-900">
+                                        <td className="px-3 py-2 text-right text-sm font-bold text-gray-900 dark:text-white">
                                           {item.breakdownItems
                                             .reduce(
                                               (sum, item) => sum + item.price,
@@ -563,7 +547,7 @@ const Data: React.FC = () => {
                                   </table>
                                 </div>
                               ) : (
-                                <div className="text-center py-4 text-sm text-gray-500 italic">
+                                <div className="text-center py-4 text-sm text-gray-500 dark:text-gray-400 italic">
                                   No breakdown items available
                                 </div>
                               )}
@@ -578,7 +562,7 @@ const Data: React.FC = () => {
                     <td colSpan={7} className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center justify-center">
                         <svg
-                          className="h-12 w-12 text-gray-400"
+                          className="h-12 w-12 text-gray-400 dark:text-gray-500"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -590,10 +574,10 @@ const Data: React.FC = () => {
                             d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <h3 className="mt-2 text-sm font-medium text-gray-900">
+                        <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
                           No expenses found
                         </h3>
-                        <p className="mt-1 text-sm text-gray-500">
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                           {searchTerm || dateRange
                             ? "Try adjusting your search or filter criteria"
                             : "Get started by adding a new expense"}
@@ -618,7 +602,7 @@ const Data: React.FC = () => {
 
           {/* Pagination */}
           {filteredItems.length > 0 && (
-            <div className="sticky bottom-0 z-20 bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-700 px-4 py-3 sm:px-6 shadow">
+            <div className="sticky bottom-0 z-20 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 sm:px-6 shadow">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 {/* Pagination Info */}
                 <div className="text-sm text-gray-700 dark:text-gray-300">
@@ -644,7 +628,7 @@ const Data: React.FC = () => {
                       setCurrentPage((prev) => Math.max(prev - 1, 1))
                     }
                     disabled={currentPage === 1}
-                    className="px-2 py-2 rounded-md text-md text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-zinc-800 border hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="px-2 py-2 rounded-md text-md text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <FaAngleLeft />
                   </button>
@@ -665,7 +649,7 @@ const Data: React.FC = () => {
                           className={`px-3 py-1.5 rounded-md text-sm font-medium border ${
                             currentPage === page
                               ? "bg-blue-600 text-white"
-                              : "text-gray-700 dark:text-gray-300 bg-white dark:bg-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-700"
+                              : "text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
                           }`}
                         >
                           {page}
@@ -678,7 +662,7 @@ const Data: React.FC = () => {
                       setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                     }
                     disabled={currentPage === totalPages}
-                    className="px-2 py-2 rounded-md text-md text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-zinc-800 border hover:bg-gray-200 dark:hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="px-2 py-2 rounded-md text-md text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <FaAngleRight />
                   </button>

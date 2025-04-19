@@ -345,10 +345,10 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                                     e.target.value
                                   )
                                 }
-                                className={`w-full p-2 leading-3 rounded border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
+                                className={`w-full p-2 leading-3 rounded border dark:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
                                   errors.breakdown && !item.name
                                     ? "border-red-400 focus:ring-red-300"
-                                    : "border-gray-300 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                                    : "border-gray-300 focus:border-blue-500 dark:border-gray-600"
                                 }`}
                                 placeholder="Item name"
                                 disabled={!newExpense.category}
@@ -399,10 +399,10 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                                       parsedValue
                                     );
                                   }}
-                                  className={`block w-full pl-6 pr-1 py-2 leading-3 rounded border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
+                                  className={`block w-full pl-6 pr-1 py-2 leading-3 rounded border dark:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
                                     errors.breakdown && item.price <= 0
                                       ? "border-red-400 focus:ring-red-300"
-                                      : "border-gray-300 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                                      : "border-gray-300 focus:border-blue-500 dark:border-gray-600"
                                   }`}
                                   placeholder="0"
                                   disabled={!newExpense.category}
