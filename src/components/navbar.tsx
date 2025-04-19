@@ -69,9 +69,6 @@ function NavBar() {
         </div>
 
         {/* Mobile Design */}
-        <button className="sm:hidden w-8 h-8 border mr-3 border-gray-500 rounded-lg flex justify-center items-center cursor-pointer">
-          <RiSearch2Line />
-        </button>
         <button onClick={toggleDarkMode} className="sm:hidden w-8 h-8 mr-3 bg-blue-400 dark:bg-gray-700 rounded-lg flex justify-center items-center">
           <FaMoon className="transition-opacity duration-300 dark:hidden text-white" />
           <FaSun className="transition-opacity duration-300 hidden dark:block text-yellow-500" />

@@ -80,8 +80,10 @@ const Data: React.FC = () => {
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [expandedActions, setExpandedActions] = useState(null);
 
   const filteredItems = expenses.filter((item) => {
+    // Keep your existing filter logic (date range, search term, etc.)
     if (dateRange) {
       const [startDateStr, endDateStr] = dateRange.split(" to ");
       const startDate = new Date(startDateStr);
@@ -93,15 +95,15 @@ const Data: React.FC = () => {
       return itemDate >= startDate && itemDate <= endDate;
     }
     if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      const matchesMain =
+      const term = searchTerm.trim().toLowerCase();
+      if (!term) return true;
+      return (
         item.category.toLowerCase().includes(term) ||
-        item.detail?.toLowerCase().includes(term) ||
-        item.id.toString().includes(term);
-      const matchesBreakdown = item.breakdownItems?.some((breakdown) =>
-        breakdown.name.toLowerCase().includes(term)
+        (item.detail || '').toLowerCase().includes(term) ||
+        (item.breakdownItems || []).some(
+          (breakdown) => breakdown.name.toLowerCase().includes(term)
+        )
       );
-      return matchesMain || matchesBreakdown;
     }
     return true;
   });
@@ -165,11 +167,12 @@ const Data: React.FC = () => {
 
   const handleAddExpense = (newExpense: Omit<ExpenseItem, "id">) => {
     const newItem: ExpenseItem = {
-      id: expenses.length + 1,
+      id: expenses.length > 0 ? Math.max(...expenses.map(item => item.id)) + 1 : 1, // Auto-increment ID
       ...newExpense,
     };
-    setExpenses((prev) => [...prev, newItem]);
+    setExpenses((prev) => [newItem, ...prev]);
     setShowModal(false);
+    setCurrentPage(1);
   };
 
   const handleUpdateExpense = (updatedExpense: ExpenseItem) => {
@@ -217,7 +220,7 @@ const Data: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full md:min-h-[550px] min-h-[850px] p-4 bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-full md:min-h-[550px] min-h-[900px] p-4 bg-gray-50 dark:bg-gray-900">
       <div className="w-full h-full flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
         {/* Toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3 border-b bg-white dark:bg-slate-800 dark:border-gray-700">
@@ -232,7 +235,7 @@ const Data: React.FC = () => {
                 placeholder="Search..."
                 className="w-full pl-9 pr-3 py-2 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {console.log("Input changed:", e.target.value); setSearchTerm(e.target.value);}}
               />
             </div>
             <button className="flex items-center gap-1 px-3 py-2 border rounded-md text-sm text-gray-700 dark:text-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -305,11 +308,11 @@ const Data: React.FC = () => {
 
         {/* Enhanced Nested Table */}
         <div className="flex-1 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 mx-4 mb-4 shadow-sm">
-          <div className={`h-full overflow-auto ${paginatedItems.length > 0 ? "pb-14" : ""}`}>
+          <div className={`h-full overflow-auto ${paginatedItems.length > 0 ? "sm:pb-14 md:pb-15 pb-24" : ""}`}>
             <table className={`w-full ${paginatedItems.length > 0 ? "h-auto" : "h-full"}`}>
               <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10 shadow-sm">
                 <tr>
-                  <th className="w-12 py-4 text-left text-xs font-medium text-gray-700 dark:text-gray-200 uppercase tracking-wider"></th>
+                  <th className="sm:w-12 w-6 py-4 text-left text-xs font-medium text-gray-700 dark:text-gray-200 uppercase tracking-wider"></th>
                   <th className="w-12 px-4 py-4 text-left text-xs font-medium text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                     <input
                       type="checkbox"
@@ -349,15 +352,15 @@ const Data: React.FC = () => {
                         }`}
                         onClick={() => toggleRowExpand(item.id)}
                       >
-                        <td className="whitespace-nowrap text-center items-center px-4">
+                        <td className="whitespace-nowrap text-center items-center pl-4 sm:px-4">
                           <button
                             onClick={() => toggleRowExpand(item.id)}
                             className="text-gray-500 dark:text-gray-400 h-3 w-4 text-sm cursor-pointer"
                           >
                             {expandedRows[item.id] ? (
-                              <FaChevronDown />
+                              <FaChevronDown onClick={() => toggleRowExpand(item.id)}/>
                             ) : (
-                              <FaChevronRight />
+                              <FaChevronRight onClick={() => toggleRowExpand(item.id)}/>
                             )}
                           </button>
                         </td>
@@ -603,7 +606,7 @@ const Data: React.FC = () => {
           {/* Pagination */}
           {filteredItems.length > 0 && (
             <div className="sticky bottom-0 z-20 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 sm:px-6 shadow">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex flex-col items-center sm:flex-row sm:items-center sm:justify-between gap-4">
                 {/* Pagination Info */}
                 <div className="text-sm text-gray-700 dark:text-gray-300">
                   Showing{" "}
@@ -622,13 +625,13 @@ const Data: React.FC = () => {
                 </div>
 
                 {/* Pagination Buttons */}
-                <div className="inline-flex flex-wrap items-center gap-1">
+                <div className="inline-flex flex-wrap justify-center sm:justify-normal items-center gap-1">
                   <button
                     onClick={() =>
                       setCurrentPage((prev) => Math.max(prev - 1, 1))
                     }
                     disabled={currentPage === 1}
-                    className="px-2 py-2 rounded-md text-md text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="px-2 py-2 rounded-md text-md dark:border-gray-400 text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <FaAngleLeft />
                   </button>
@@ -646,7 +649,7 @@ const Data: React.FC = () => {
                         <button
                           key={page}
                           onClick={() => setCurrentPage(page)}
-                          className={`px-3 py-1.5 rounded-md text-sm font-medium border ${
+                          className={`px-3 py-1.5 rounded-md text-sm font-medium border dark:border-gray-400 ${
                             currentPage === page
                               ? "bg-blue-600 text-white"
                               : "text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
@@ -662,7 +665,7 @@ const Data: React.FC = () => {
                       setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                     }
                     disabled={currentPage === totalPages}
-                    className="px-2 py-2 rounded-md text-md text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="px-2 py-2 rounded-md text-md dark:border-gray-400 text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <FaAngleRight />
                   </button>

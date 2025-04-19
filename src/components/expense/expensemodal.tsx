@@ -185,12 +185,12 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
         <form
           onSubmit={handleSubmit}
-          className="flex-1 flex flex-col overflow-hidden"
+          className="flex-1 flex flex-col sm:overflow-hidden overflow-auto"
         >
           <div className="flex-1 flex flex-col overflow-visible p-4">
-            <div className="grid grid-cols-3 gap-4 h-full">
+            <div className="grid sm:grid-cols-3 grid-col-1 gap-4 h-full">
               {/* Left Side - Basic Information */}
-              <div className="flex flex-col col-span-1 h-full space-y-4">
+              <div className="flex flex-col sm:col-span-1 col-span-2  h-full space-y-4">
                 {/* Category */}
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -449,7 +449,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
           </div>
 
           {/* Total and Submit/Cancel */}
-          <div className="sticky bottom-0">
+          <div className="sticky bottom-0 z-20 bg-white">
             <div className="p-3 border-t border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
               <div className="p-2 rounded border mb-3 bg-blue-50 border-blue-200 dark:bg-gray-700 dark:border-gray-600">
                 <div className="flex justify-between items-center">
