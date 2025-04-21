@@ -77,10 +77,10 @@ const Data: React.FC = () => {
   const [showPrintAll, setShowPrintAll] = useState<boolean>(false);
   const [editingItem, setEditingItem] = useState<ExpenseItem | null>(null);
   const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
+  const [isAllSelected, setIsAllSelected] = useState(false);
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [expandedActions, setExpandedActions] = useState(null);
 
   const filteredItems = expenses.filter((item) => {
     // Keep your existing filter logic (date range, search term, etc.)
@@ -109,8 +109,10 @@ const Data: React.FC = () => {
   });
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, dateRange, filteredItems.length]);
+    const allSelected = filteredItems.length > 0 && 
+      filteredItems.every(item => selectedItems.includes(item.id));
+    setIsAllSelected(allSelected);
+  }, [selectedItems, filteredItems]);
 
   const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
   const paginatedItems = filteredItems.slice(
@@ -124,7 +126,7 @@ const Data: React.FC = () => {
   );
   const DOTS = "...";
 
-  function getPaginationRange({ currentPage, totalPages }) {
+  function getPaginationRange({ currentPage, totalPages }: { currentPage: number; totalPages: number }) {
     const siblingCount = 1;
     const totalNumbers = 5;
 
@@ -189,19 +191,28 @@ const Data: React.FC = () => {
     setSelectedItems(selectedItems.filter((itemId) => itemId !== id));
   };
 
-  const toggleSelectItem = (id: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedItems((prev) =>
-      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
-    );
+  const handleMultiDelete = () => {
+    setExpenses(prev => prev.filter(item => !selectedItems.includes(item.id)));
+    setSelectedItems([]);
+    setIsAllSelected(false);
   };
 
   const toggleSelectAll = () => {
-    if (selectedItems.length === filteredItems.length) {
+    if (isAllSelected) {
       setSelectedItems([]);
     } else {
-      setSelectedItems(filteredItems.map((item) => item.id));
+      setSelectedItems(filteredItems.map(item => item.id));
     }
+    setIsAllSelected(!isAllSelected);
+  };
+  
+  const toggleSelectItem = (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedItems(prev => 
+      prev.includes(id) 
+        ? prev.filter(itemId => itemId !== id) 
+        : [...prev, id]
+    );
   };
 
   const handlePrintSelected = () => {
@@ -246,6 +257,28 @@ const Data: React.FC = () => {
 
           {/* Right section: Action buttons */}
           <div className="flex flex-wrap items-center gap-2 justify-end w-full lg:w-auto">
+          {selectedItems.length > 0 && (
+    <button
+      onClick={handleMultiDelete}
+      className="flex items-center gap-1 px-3 py-2 bg-red-600 text-white rounded-md text-sm hover:bg-red-700 transition-all"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-4 w-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+        />
+      </svg>
+      <span className="sm:inline">Delete ({selectedItems.length})</span>
+    </button>
+  )}
             <button
               onClick={() => setShowModal(true)}
               className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-all"
@@ -578,7 +611,7 @@ const Data: React.FC = () => {
                           />
                         </svg>
                         <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-                          No expenses found
+                          No Expenses found
                         </h3>
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                           {searchTerm || dateRange
