@@ -24,8 +24,10 @@ function NavBar() {
         return "Dashboard";
       case "/category":
         return "Category";
-      case "/income":
-        return "Income";
+      // case "/income":
+      //   return "Income";
+      case "/expense":
+          return "Expense";
       default:
         return "";
     }
