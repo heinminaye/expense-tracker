@@ -99,9 +99,9 @@ const Data: React.FC = () => {
       if (!term) return true;
       return (
         item.category.toLowerCase().includes(term) ||
-        (item.detail || '').toLowerCase().includes(term) ||
-        (item.breakdownItems || []).some(
-          (breakdown) => breakdown.name.toLowerCase().includes(term)
+        (item.detail || "").toLowerCase().includes(term) ||
+        (item.breakdownItems || []).some((breakdown) =>
+          breakdown.name.toLowerCase().includes(term)
         )
       );
     }
@@ -109,8 +109,9 @@ const Data: React.FC = () => {
   });
 
   useEffect(() => {
-    const allSelected = filteredItems.length > 0 && 
-      filteredItems.every(item => selectedItems.includes(item.id));
+    const allSelected =
+      filteredItems.length > 0 &&
+      filteredItems.every((item) => selectedItems.includes(item.id));
     setIsAllSelected(allSelected);
   }, [selectedItems, filteredItems]);
 
@@ -126,7 +127,13 @@ const Data: React.FC = () => {
   );
   const DOTS = "...";
 
-  function getPaginationRange({ currentPage, totalPages }: { currentPage: number; totalPages: number }) {
+  function getPaginationRange({
+    currentPage,
+    totalPages,
+  }: {
+    currentPage: number;
+    totalPages: number;
+  }) {
     const siblingCount = 1;
     const totalNumbers = 5;
 
@@ -169,7 +176,10 @@ const Data: React.FC = () => {
 
   const handleAddExpense = (newExpense: Omit<ExpenseItem, "id">) => {
     const newItem: ExpenseItem = {
-      id: expenses.length > 0 ? Math.max(...expenses.map(item => item.id)) + 1 : 1, // Auto-increment ID
+      id:
+        expenses.length > 0
+          ? Math.max(...expenses.map((item) => item.id)) + 1
+          : 1, // Auto-increment ID
       ...newExpense,
     };
     setExpenses((prev) => [newItem, ...prev]);
@@ -192,7 +202,9 @@ const Data: React.FC = () => {
   };
 
   const handleMultiDelete = () => {
-    setExpenses(prev => prev.filter(item => !selectedItems.includes(item.id)));
+    setExpenses((prev) =>
+      prev.filter((item) => !selectedItems.includes(item.id))
+    );
     setSelectedItems([]);
     setIsAllSelected(false);
   };
@@ -201,17 +213,15 @@ const Data: React.FC = () => {
     if (isAllSelected) {
       setSelectedItems([]);
     } else {
-      setSelectedItems(filteredItems.map(item => item.id));
+      setSelectedItems(filteredItems.map((item) => item.id));
     }
     setIsAllSelected(!isAllSelected);
   };
-  
+
   const toggleSelectItem = (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    setSelectedItems(prev => 
-      prev.includes(id) 
-        ? prev.filter(itemId => itemId !== id) 
-        : [...prev, id]
+    setSelectedItems((prev) =>
+      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
     );
   };
 
@@ -246,7 +256,10 @@ const Data: React.FC = () => {
                 placeholder="Search..."
                 className="w-full pl-9 pr-3 py-2 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={searchTerm}
-                onChange={(e) => {console.log("Input changed:", e.target.value); setSearchTerm(e.target.value);}}
+                onChange={(e) => {
+                  console.log("Input changed:", e.target.value);
+                  setSearchTerm(e.target.value);
+                }}
               />
             </div>
             <button className="flex items-center gap-1 px-3 py-2 border rounded-md text-sm text-gray-700 dark:text-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -257,28 +270,30 @@ const Data: React.FC = () => {
 
           {/* Right section: Action buttons */}
           <div className="flex flex-wrap items-center gap-2 justify-end w-full lg:w-auto">
-          {selectedItems.length > 0 && (
-    <button
-      onClick={handleMultiDelete}
-      className="flex items-center gap-1 px-3 py-2 bg-red-600 text-white rounded-md text-sm hover:bg-red-700 transition-all"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-4 w-4"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-        />
-      </svg>
-      <span className="sm:inline">Delete ({selectedItems.length})</span>
-    </button>
-  )}
+            {selectedItems.length > 0 && (
+              <button
+                onClick={handleMultiDelete}
+                className="flex items-center gap-1 px-3 py-2 bg-red-600 text-white rounded-md text-sm hover:bg-red-700 transition-all"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+                <span className="sm:inline">
+                  Delete ({selectedItems.length})
+                </span>
+              </button>
+            )}
             <button
               onClick={() => setShowModal(true)}
               className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-all"
@@ -287,13 +302,17 @@ const Data: React.FC = () => {
               <span className="sm:inline">Add</span>
             </button>
 
-            <button
-              onClick={() => setShowPrintAll(true)}
-              className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 transition-all"
-            >
-              <FaPrint className="h-4 w-4" />
-              <span className="sm:inline">Print All</span>
-            </button>
+            {paginatedItems.length > 0 ? (
+              <button
+                onClick={() => setShowPrintAll(true)}
+                className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 transition-all"
+              >
+                <FaPrint className="h-4 w-4" />
+                <span className="sm:inline">Print All</span>
+              </button>
+            ) : (
+              <></>
+            )}
 
             {selectedItems.length > 0 && (
               <button
@@ -341,8 +360,16 @@ const Data: React.FC = () => {
 
         {/* Enhanced Nested Table */}
         <div className="flex-1 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 mx-4 mb-4 shadow-sm">
-          <div className={`h-full overflow-auto ${paginatedItems.length > 0 ? "sm:pb-14 md:pb-15 pb-24" : ""}`}>
-            <table className={`w-full ${paginatedItems.length > 0 ? "h-auto" : "h-full"}`}>
+          <div
+            className={`h-full overflow-auto ${
+              paginatedItems.length > 0 ? "sm:pb-14 md:pb-15 pb-24" : ""
+            }`}
+          >
+            <table
+              className={`w-full ${
+                paginatedItems.length > 0 ? "h-auto" : "h-full"
+              }`}
+            >
               <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10 shadow-sm">
                 <tr>
                   <th className="sm:w-12 w-6 py-4 text-left text-xs font-medium text-gray-700 dark:text-gray-200 uppercase tracking-wider"></th>
@@ -363,7 +390,7 @@ const Data: React.FC = () => {
                   <th className="px-4 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                     Expense
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                  <th className="px-4 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                     Date
                   </th>
                   <th className="px-4 py-4 text-right text-sm font-medium text-gray-700 dark:text-gray-200 uppercase tracking-wider">
@@ -381,7 +408,9 @@ const Data: React.FC = () => {
                       {/* Main Row */}
                       <tr
                         className={`hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer ${
-                          expandedRows[item.id] ? "bg-blue-50 dark:bg-blue-900/20" : "bg-white dark:bg-slate-800"
+                          expandedRows[item.id]
+                            ? "bg-blue-50 dark:bg-blue-900/20"
+                            : "bg-white dark:bg-slate-800"
                         }`}
                         onClick={() => toggleRowExpand(item.id)}
                       >
@@ -391,9 +420,13 @@ const Data: React.FC = () => {
                             className="text-gray-500 dark:text-gray-400 h-3 w-4 text-sm cursor-pointer"
                           >
                             {expandedRows[item.id] ? (
-                              <FaChevronDown onClick={() => toggleRowExpand(item.id)}/>
+                              <FaChevronDown
+                                onClick={() => toggleRowExpand(item.id)}
+                              />
                             ) : (
-                              <FaChevronRight onClick={() => toggleRowExpand(item.id)}/>
+                              <FaChevronRight
+                                onClick={() => toggleRowExpand(item.id)}
+                              />
                             )}
                           </button>
                         </td>
