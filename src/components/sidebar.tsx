@@ -33,6 +33,7 @@ export default function Sidebar() {
 
   const sidebarItems = [
     { icon: <LuLayoutDashboard />, text: "Dashboard", link: "/dashboard" },
+    { icon: <TbCategory />, text: "Category", link: "/category" },
     { icon: <TbCategory />, text: "Income", link: "/income" },
     { icon: <TbCategory />, text: "Expense", link: "/expense" },
   ];

@@ -470,7 +470,9 @@ const Data: React.FC = () => {
                                 e.stopPropagation();
                                 setEditingItem(item);
                               }}
-                              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 p-1 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                // p-1 sm:p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-600
+
+                              className="text-blue-600 dark:text-blue-400  p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                               title="Edit"
                             >
                               <svg
@@ -493,7 +495,7 @@ const Data: React.FC = () => {
                                 e.stopPropagation();
                                 setItemToPrint(item);
                               }}
-                              className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 p-1 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                              className="text-green-600 dark:text-green-400 p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                               title="Print"
                             >
                               <svg
@@ -516,7 +518,7 @@ const Data: React.FC = () => {
                                 e.stopPropagation();
                                 handleDeleteExpense(item.id);
                               }}
-                              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 p-1 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+                              className="text-red-600 dark:text-red-400 p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                               title="Delete"
                             >
                               <svg
@@ -631,7 +633,7 @@ const Data: React.FC = () => {
                     <td colSpan={7} className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center justify-center">
                         <svg
-                          className="h-12 w-12 text-gray-400 dark:text-gray-500"
+                          className="h-12 w-12 text-gray-400 "
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -644,7 +646,7 @@ const Data: React.FC = () => {
                           />
                         </svg>
                         <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
-                          No Expenses found
+                          No Expense found
                         </h3>
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                           {searchTerm || dateRange

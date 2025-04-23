@@ -9,6 +9,7 @@ import NavBar from "./components/navbar";
 import { useEffect, useState } from "react";
 import Expense from "./pages/expense";
 import Income from "./pages/income";
+import Category from "./pages/category";
 
 function RootLayout() {
   const { user } = useStore((state) => state);
@@ -47,6 +48,7 @@ function App() {
           <Route element={<RootLayout />}>
             <Route path="/" element={<Navigate to="/dashboard" />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/category" element={<Category />} />
             <Route path="/income" element={<Income />} />
             <Route path="/expense" element={<Expense />} />
             {/* Catch-all route for 404 */}
