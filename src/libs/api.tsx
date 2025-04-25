@@ -59,4 +59,16 @@ export const addExpenseWithBreakdown = async (expenseData: any) => {
   }
 };
 
+export const softDeleteExpenses = async (expenseData: any) => {
+  try {
+    const { token } = useStore.getState();
+    if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    const response = await api.post(`${expenseprefix}/delete`, expenseData);
+    return response.data;
+  } catch (error) {
+    console.error('Error soft deleting expenses:', error);
+    throw error;
+  }
+};
+
 export default api;

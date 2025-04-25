@@ -16,11 +16,9 @@ import {
   FaAngleRight,
 } from "react-icons/fa";
 import { toast } from "sonner";
-import api, { addExpenseWithBreakdown, fetchExpenses } from "../../libs/api";
-import { set } from "react-hook-form";
+import api, { addExpenseWithBreakdown, fetchExpenses, softDeleteExpenses } from "../../libs/api";
 
 const ITEMS_PER_PAGE = 10;
-
 
 const Data: React.FC = () => {
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
@@ -29,58 +27,15 @@ const Data: React.FC = () => {
   const [itemToPrint, setItemToPrint] = useState<ExpenseItem | null>(null);
   const [showPrintAll, setShowPrintAll] = useState<boolean>(false);
   const [editingItem, setEditingItem] = useState<ExpenseItem | null>(null);
-  const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({});
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [isAllSelected, setIsAllSelected] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-
-  const filteredItems = expenses.filter((item) => {
-    // Keep your existing filter logic (date range, search term, etc.)
-    if (dateRange) {
-      const [startDateStr, endDateStr] = dateRange.split(" to ");
-      const startDate = new Date(startDateStr);
-      startDate.setHours(0, 0, 0, 0);
-      const endDate = new Date(endDateStr);
-      endDate.setHours(23, 59, 59, 999);
-      const itemDate = new Date(item.date);
-      itemDate.setHours(12, 0, 0, 0);
-      return itemDate >= startDate && itemDate <= endDate;
-    }
-    if (searchTerm) {
-      const term = searchTerm.trim().toLowerCase();
-      if (!term) return true;
-      return (
-        item.category.toLowerCase().includes(term) ||
-        (item.note || "").toLowerCase().includes(term) ||
-        (item.breakdownItems || []).some((breakdown) =>
-          breakdown.name.toLowerCase().includes(term)
-        )
-      );
-    }
-    return true;
-  });
-
-  useEffect(() => {
-    
-    const allSelected =
-      filteredItems.length > 0 &&
-      filteredItems.every((item) => selectedItems.includes(item.id));
-    setIsAllSelected(allSelected);
-    if (dateRange) fetchData();
-  }, [searchTerm, dateRange, currentPage]);
-
-  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
-  const paginatedItems = filteredItems.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
-  const totalAmount = filteredItems.reduce(
-    (sum, item) => sum + item.expense,
-    0
-  );
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
 
   const { user } = useStore.getState();
 
@@ -88,37 +43,44 @@ const Data: React.FC = () => {
     setIsLoading(true);
     try {
       const [startDateStr, endDateStr] = dateRange.split(" to ");
-      const startDate = new Date(startDateStr);
-      const endDate = new Date(endDateStr);
-     
+      const startDate = dateRange ? new Date(startDateStr) : undefined;
+      const endDate = dateRange ? new Date(endDateStr) : undefined;
+
       const body = {
         user_id: user,
         search_value: searchTerm,
         date_type: dateRange ? "custom" : "all",
-        start_date: startDate || undefined,
-        end_date: endDate || undefined,
-        page: currentPage,
+        start_date: startDate,
+        end_date: endDate,
+        page: currentPage
       };
 
       const response = await fetchExpenses(body);
-      console.log(response)
+      
       if (response.returncode === "200") {
         setExpenses(response.data);
+        setTotalPages(response.totalPages || 1);
+        setTotalItems(response.totalRows || 0);
+        setTotalAmount(response.totalAmount || 0);
       } else {
         toast.error(response.message || "Failed to fetch expenses");
       }
     } catch (err) {
+      console.error("Error fetching expenses:", err);
       toast.error("Failed to connect to the server");
     } finally {
       setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    if(dateRange)fetchData();
+  }, [searchTerm, dateRange, currentPage]);
+
   const handleAddExpense = async (newExpense: Omit<ExpenseItem, "id">) => {
     try {
       setIsLoading(true);
       
-      // Prepare the data for API submission
       const expenseData = {
         ...newExpense,
         user_id: user,
@@ -128,8 +90,7 @@ const Data: React.FC = () => {
           quantity: item.quantity
         })) || []
       };
-      console.log(expenseData)
-  
+
       const response = await addExpenseWithBreakdown(expenseData);
       
       if (response.returncode === "200") {
@@ -137,10 +98,10 @@ const Data: React.FC = () => {
         setShowModal(false);
         setCurrentPage(1);
         toast.success("Expense added successfully");
-        
+        fetchData(); // Refresh data to get updated totals
         return response.data;
       } else {
-        toast.error(response.message || "Failed to fetch expenses");
+        toast.error(response.message || "Failed to add expense");
         return null;
       }
     } catch (error: any) {
@@ -151,16 +112,10 @@ const Data: React.FC = () => {
       setIsLoading(false);
     }
   };
-  
+
   const DOTS = "...";
 
-  function getPaginationRange({
-    currentPage,
-    totalPages,
-  }: {
-    currentPage: number;
-    totalPages: number;
-  }) {
+  const getPaginationRange = () => {
     const siblingCount = 1;
     const totalNumbers = 5;
 
@@ -176,7 +131,7 @@ const Data: React.FC = () => {
 
     if (!showLeftDots && showRightDots) {
       const range = Array.from(
-        { length: 3 + 2 * siblingCount },
+        { length: totalNumbers - 1 },
         (_, i) => i + 1
       );
       return [...range, DOTS, totalPages];
@@ -184,23 +139,22 @@ const Data: React.FC = () => {
 
     if (showLeftDots && !showRightDots) {
       const range = Array.from(
-        { length: 3 + 2 * siblingCount },
-        (_, i) => totalPages - (3 + 2 * siblingCount) + 1 + i
+        { length: totalNumbers - 1 },
+        (_, i) => totalPages - (totalNumbers - 1) + 1 + i
       );
       return [1, DOTS, ...range];
     }
 
     if (showLeftDots && showRightDots) {
       const range = Array.from(
-        { length: 2 * siblingCount + 1 },
+        { length: rightSibling - leftSibling + 1 },
         (_, i) => leftSibling + i
       );
       return [1, DOTS, ...range, DOTS, totalPages];
     }
 
     return [];
-  }
-
+  };
 
   const handleUpdateExpense = (updatedExpense: ExpenseItem) => {
     setExpenses(
@@ -209,31 +163,77 @@ const Data: React.FC = () => {
       )
     );
     setEditingItem(null);
+    fetchData(); // Refresh data to get updated totals
   };
 
-  const handleDeleteExpense = (id: number) => {
-    setExpenses(expenses.filter((item) => item.id !== id));
-    setSelectedItems(selectedItems.filter((itemId) => itemId !== id));
+  const handleDeleteExpense = async (id: string) => {
+    try {
+      setIsLoading(true);
+      const response = await softDeleteExpenses({
+        user_id: user,
+        expense_ids: [id], 
+      });
+  
+      if (response.returncode === "200") {
+        setExpenses(prev => prev.filter(item => item.id !== id));
+        setSelectedItems(prev => prev.filter(itemId => itemId !== id));
+        toast.success(response.message || "Expense deleted successfully");
+        fetchData(); // Refresh data to get updated totals
+      } else {
+        toast.error(response.message || "Failed to delete expense");
+      }
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      toast.error("Failed to connect to server");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleMultiDelete = () => {
-    setExpenses((prev) =>
-      prev.filter((item) => !selectedItems.includes(item.id))
+  const handleMultiDelete = async () => {
+    if (selectedItems.length === 0) return;
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${selectedItems.length} selected items?`
     );
-    setSelectedItems([]);
-    setIsAllSelected(false);
+  
+    if (!confirmed) return;
+    try {
+      setIsLoading(true);
+
+      const response = await softDeleteExpenses({
+        user_id: user,
+        expense_ids: selectedItems,
+      });
+  
+      if (response.returncode === "200") {
+        setExpenses((prev) =>
+          prev.filter((item) => !selectedItems.includes(item.id))
+        );
+        setSelectedItems([]);
+        setIsAllSelected(false);
+        toast.success(response.message || "Expenses deleted successfully");
+        fetchData(); // Refresh data to get updated totals
+      } else {
+        toast.error(response.message || "Failed to delete expenses");
+      }
+    } catch (error) {
+      console.error("Error deleting expenses:", error);
+      toast.error("Failed to connect to server");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const toggleSelectAll = () => {
     if (isAllSelected) {
       setSelectedItems([]);
     } else {
-      setSelectedItems(filteredItems.map((item) => item.id));
+      setSelectedItems(expenses.map((item) => item.id));
     }
     setIsAllSelected(!isAllSelected);
   };
 
-  const toggleSelectItem = (id: number, e: React.MouseEvent) => {
+  const toggleSelectItem = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedItems((prev) =>
       prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
@@ -248,12 +248,14 @@ const Data: React.FC = () => {
     setShowPrintAll(true);
   };
 
-  const toggleRowExpand = (id: number) => {
+  const toggleRowExpand = (id: string) => {
     setExpandedRows((prev) => ({
       ...prev,
       [id]: !prev[id],
     }));
   };
+
+  const paginationRange = getPaginationRange();
 
   return (
     <div className="flex flex-col h-full md:min-h-[550px] min-h-[900px] p-4 bg-gray-50 dark:bg-gray-900">
@@ -271,10 +273,7 @@ const Data: React.FC = () => {
                 placeholder="Search..."
                 className="w-full pl-9 pr-3 py-2 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={searchTerm}
-                onChange={(e) => {
-                  console.log("Input changed:", e.target.value);
-                  setSearchTerm(e.target.value);
-                }}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <button className="flex items-center gap-1 px-3 py-2 border rounded-md text-sm text-gray-700 dark:text-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -317,7 +316,7 @@ const Data: React.FC = () => {
               <span className="sm:inline">Add</span>
             </button>
 
-            {paginatedItems.length > 0 ? (
+            {expenses.length > 0 ? (
               <button
                 onClick={() => setShowPrintAll(true)}
                 className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 transition-all"
@@ -325,9 +324,7 @@ const Data: React.FC = () => {
                 <FaPrint className="h-4 w-4" />
                 <span className="sm:inline">Print All</span>
               </button>
-            ) : (
-              <></>
-            )}
+            ) : null}
 
             {selectedItems.length > 0 && (
               <button
@@ -359,7 +356,7 @@ const Data: React.FC = () => {
               Remaining
             </div>
             <div className="text-xl font-bold text-green-600 dark:text-green-400">
-              {(100000).toLocaleString()}
+              {(100000 - totalAmount).toLocaleString()}
             </div>
           </div>
 
@@ -368,7 +365,7 @@ const Data: React.FC = () => {
               Number of Items
             </div>
             <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
-              {filteredItems.length}
+              {totalItems}
             </div>
           </div>
         </div>
@@ -377,14 +374,10 @@ const Data: React.FC = () => {
         <div className="flex-1 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 mx-4 mb-4 shadow-sm">
           <div
             className={`h-full overflow-auto ${
-              paginatedItems.length > 0 ? "sm:pb-14 md:pb-15 pb-24" : ""
+              expenses.length > 0 ? "sm:pb-14 md:pb-15 pb-24" : ""
             }`}
           >
-            <table
-              className={`w-full ${
-                paginatedItems.length > 0 ? "h-auto" : "h-full"
-              }`}
-            >
+            <table className={`w-full ${expenses.length > 0 ? "h-auto" : "h-full"}`}>
               <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10 shadow-sm">
                 <tr>
                   <th className="sm:w-12 w-6 py-4 text-left text-xs font-medium text-gray-700 dark:text-gray-200 uppercase tracking-wider"></th>
@@ -392,8 +385,8 @@ const Data: React.FC = () => {
                     <input
                       type="checkbox"
                       checked={
-                        selectedItems.length === filteredItems.length &&
-                        filteredItems.length > 0
+                        selectedItems.length === expenses.length &&
+                        expenses.length > 0
                       }
                       onChange={toggleSelectAll}
                       className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-slate-800"
@@ -417,8 +410,8 @@ const Data: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-slate-800">
-                {paginatedItems.length > 0 ? (
-                  paginatedItems.map((item,index) => (
+                {expenses.length > 0 ? (
+                  expenses.map((item, index) => (
                     <React.Fragment key={item.id}>
                       {/* Main Row */}
                       <tr
@@ -435,13 +428,9 @@ const Data: React.FC = () => {
                             className="text-gray-500 dark:text-gray-400 h-3 w-4 text-sm cursor-pointer"
                           >
                             {expandedRows[item.id] ? (
-                              <FaChevronDown
-                                onClick={() => toggleRowExpand(item.id)}
-                              />
+                              <FaChevronDown />
                             ) : (
-                              <FaChevronRight
-                                onClick={() => toggleRowExpand(item.id)}
-                              />
+                              <FaChevronRight />
                             )}
                           </button>
                         </td>
@@ -449,13 +438,16 @@ const Data: React.FC = () => {
                           <input
                             type="checkbox"
                             checked={selectedItems.includes(item.id)}
-                            onChange={(e) => toggleSelectItem(item.id, e)}
-                            onClick={(e) => e.stopPropagation()}
+                            onChange={() => {}}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSelectItem(item.id, e);
+                            }}
                             className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-slate-800"
                           />
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                          {index+1}
+                          {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3">
                           <div className="flex items-center">
@@ -485,9 +477,7 @@ const Data: React.FC = () => {
                                 e.stopPropagation();
                                 setEditingItem(item);
                               }}
-                // p-1 sm:p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-600
-
-                              className="text-blue-600 dark:text-blue-400  p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                              className="text-blue-600 dark:text-blue-400 p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                               title="Edit"
                             >
                               <svg
@@ -555,7 +545,6 @@ const Data: React.FC = () => {
                         </td>
                       </tr>
 
-                      {/* Expanded Content */}
                       {expandedRows[item.id] && (
                         <tr className="bg-blue-50 dark:bg-blue-900/20">
                           <td colSpan={7} className="px-4 py-3">
@@ -564,8 +553,7 @@ const Data: React.FC = () => {
                                 <strong>Notes:</strong> {item.note || "-"}
                               </div>
                               {/* Breakdown Items */}
-                              {item.breakdownItems &&
-                              item.breakdownItems.length > 0 ? (
+                              {item.breakdownItems && item.breakdownItems.length > 0 ? (
                                 <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
                                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                     <thead className="bg-gray-100 dark:bg-gray-700">
@@ -585,34 +573,31 @@ const Data: React.FC = () => {
                                       </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-slate-800">
-                                      {item.breakdownItems.map(
-                                        (breakdown, idx) => (
-                                          <tr
-                                            key={idx}
-                                            className="hover:bg-gray-50 dark:hover:bg-slate-900 transition-colors"
-                                          >
-                                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                                              {idx + 1}
-                                            </td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                                              <div className="flex items-center">
-                                                <div className="">
-                                                  {breakdown.name}
-                                                </div>
+                                      {item.breakdownItems.map((breakdown, idx) => (
+                                        <tr
+                                          key={breakdown.id}
+                                          className="hover:bg-gray-50 dark:hover:bg-slate-900 transition-colors"
+                                        >
+                                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                            {idx + 1}
+                                          </td>
+                                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                            <div className="flex items-center">
+                                              <div className="">
+                                                {breakdown.name}
                                               </div>
-                                            </td>
-                                            <td className="px-3 py-3 whitespace-nowrap text-center text-sm text-gray-500 dark:text-gray-400">
-                                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white">
-                                                {breakdown.quantity}
-                                              </span>
-                                            </td>
-                                            <td className="px-3 py-3 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-white">
-                                              {breakdown.price.toLocaleString()}
-                                            </td>
-                                          </tr>
-                                        )
-                                      )}
-                                      {/* Subtotal Row */}
+                                            </div>
+                                          </td>
+                                          <td className="px-3 py-3 whitespace-nowrap text-center text-sm text-gray-500 dark:text-gray-400">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white">
+                                              {breakdown.quantity}
+                                            </span>
+                                          </td>
+                                          <td className="px-3 py-3 whitespace-nowrap text-right text-sm font-medium text-gray-900 dark:text-white">
+                                            {breakdown.price.toLocaleString()}
+                                          </td>
+                                        </tr>
+                                      ))}
                                       <tr className="bg-gray-50 dark:bg-gray-700">
                                         <td
                                           colSpan={3}
@@ -687,7 +672,7 @@ const Data: React.FC = () => {
           </div>
 
           {/* Pagination */}
-          {filteredItems.length > 0 && (
+          {expenses.length > 0 && (
             <div className="sticky bottom-0 z-20 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 sm:px-6 shadow">
               <div className="flex flex-col items-center sm:flex-row sm:items-center sm:justify-between gap-4">
                 {/* Pagination Info */}
@@ -696,14 +681,15 @@ const Data: React.FC = () => {
                   <span className="font-medium">
                     {(currentPage - 1) * ITEMS_PER_PAGE + 1}
                   </span>{" "}
-                  to{" "}
+                  -
+                  {" "}
                   <span className="font-medium">
                     {Math.min(
                       currentPage * ITEMS_PER_PAGE,
-                      filteredItems.length
+                      totalItems
                     )}
                   </span>{" "}
-                  of <span className="font-medium">{filteredItems.length}</span>{" "}
+                  of <span className="font-medium">{totalItems}</span>{" "}
                   results
                 </div>
 
@@ -719,28 +705,27 @@ const Data: React.FC = () => {
                     <FaAngleLeft />
                   </button>
 
-                  {getPaginationRange({ currentPage, totalPages }).map(
-                    (page, idx) =>
-                      page === "..." ? (
-                        <span
-                          key={idx}
-                          className="px-2 py-1.5 text-sm text-gray-400 dark:text-gray-500"
-                        >
-                          ...
-                        </span>
-                      ) : (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`px-3 py-1.5 rounded-md text-sm font-medium border dark:border-gray-400 ${
-                            currentPage === page
-                              ? "bg-blue-600 text-white"
-                              : "text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      )
+                  {paginationRange.map((page, idx) =>
+                    page === "..." ? (
+                      <span
+                        key={idx}
+                        className="px-2 py-1.5 text-sm text-gray-400 dark:text-gray-500"
+                      >
+                        ...
+                      </span>
+                    ) : (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page as number)}
+                        className={`px-3 py-1.5 rounded-md text-sm font-medium border dark:border-gray-400 ${
+                          currentPage === page
+                            ? "bg-blue-600 text-white"
+                            : "text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
                   )}
 
                   <button
@@ -791,7 +776,7 @@ const Data: React.FC = () => {
           expenses={
             selectedItems.length > 0
               ? expenses.filter((item) => selectedItems.includes(item.id))
-              : filteredItems
+              : expenses
           }
           dateRange={dateRange}
           totalAmount={
