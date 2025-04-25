@@ -1,4 +1,4 @@
-interface IncomeItem {
+export interface IncomeItem {
   id: number;
   amount: number;
   date: string;

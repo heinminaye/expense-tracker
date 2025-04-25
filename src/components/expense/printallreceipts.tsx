@@ -436,18 +436,18 @@ const PrintAllReceipts: React.FC<PrintAllReceiptsProps> = ({
                   .map(
                     (item, index) => `
                     <tr>
-                      <td><span class="id-badge">${item.id}</span></td>
+                      <td><span class="id-badge">${index+1}</span></td>
                       <td>${item.category}</td>
                       <td>${formatDate(item.date)}</td>
                       <td>${item.expense.toLocaleString()}</td>
                     </tr>
                     ${
-                      item.detail
+                      item.note
                         ? `
                           <tr class="note">
                             <td colspan="4">
                               <div class="notes-cell">
-                                <strong>Notes:</strong> ${item.detail}
+                                <strong>Notes:</strong> ${item.note}
                               </div>
                             </td>
                           </tr>

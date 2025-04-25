@@ -41,43 +41,43 @@ function SignIn() {
     }
   }, [user, navigate]);
 
-  const fakeApiPost = (url, data) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        if (data.username === 'admin' && data.password === 'password123') {
-          resolve({
-            data: {
-              returncode: '200', 
-              message: 'Login successful!',
-              data: {
-                user_id: 'admin@gmail.com',
-              },
-              token: 'fakeJwtToken123',
-            },
-          });
-        } else {
-          resolve({
-            data: {
-              returncode: '400',
-              message: 'Invalid username or password',
-            },
-          });
-        }
-      }, 1000); 
-    });
-  };
+  // const fakeApiPost = (url, data) => {
+  //   return new Promise((resolve) => {
+  //     setTimeout(() => {
+  //       if (data.username === 'admin' && data.password === 'password123') {
+  //         resolve({
+  //           data: {
+  //             returncode: '200', 
+  //             message: 'Login successful!',
+  //             data: {
+  //               user_id: 'admin@gmail.com',
+  //             },
+  //             token: 'fakeJwtToken123',
+  //           },
+  //         });
+  //       } else {
+  //         resolve({
+  //           data: {
+  //             returncode: '400',
+  //             message: 'Invalid username or password',
+  //           },
+  //         });
+  //       }
+  //     }, 1000); 
+  //   });
+  // };
 
   const onSubmit = async (data: any) => {
     setLoading(true);
     try {
-      // const { data: response } = await api.post('/auth/signin', data);
-      const { data: response } = await fakeApiPost('/auth/signin', data);
+      const { data: response } = await api.post('/auth/signin', data);
+      // const { data: response } = await fakeApiPost('/auth/signin', data);
       console.log(response)
       if (response.returncode == '200') {
         toast.success(response.message)
-        const userInfo = {...response.data.user_id,token:response.token}
-        localStorage.setItem("user",JSON.stringify(userInfo));
-        setCredentails(userInfo)
+        localStorage.setItem("user", response.data['user_id']);
+        localStorage.setItem("token", response.token);
+        setCredentails(response.data['user_id'],response.token);
         setTimeout(() => {
           reset();
           navigate("/");

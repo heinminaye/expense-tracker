@@ -284,7 +284,7 @@ const CategoryManager: React.FC = () => {
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="flex-1 px-2 sm:px-3 py-1 sm:py-2 text-sm border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="flex-1 px-2 sm:px-3 py-1 sm:py-2 text-sm dark:text-white border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === "Enter") saveEditing(category.id);
@@ -404,7 +404,7 @@ const CategoryManager: React.FC = () => {
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 placeholder="Category name"
-                className="flex-1 px-3 sm:px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="flex-1 px-3 sm:px-4 py-2 text-sm border dark:text-white border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 autoFocus
                 onKeyDown={(e) => e.key === "Enter" && addMainCategory()}
               />

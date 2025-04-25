@@ -1,6 +1,7 @@
 import axios from "axios";
 
 import { IncomeItem } from "../components/types/income";
+import useStore from "../store";
 
 const API_URL = "http://localhost:3030/api";
 
@@ -32,63 +33,30 @@ export const formatForSubmit = (dateString: string) => {
     return `${day}-${month}-${year}`;
 };
 
-let incomes: IncomeItem[] = [
-  {
-    id: 1,
-    payer: "ABC Company",
-    amount: 5000,
-    date: "2025-04-01",
-    note: "Monthly salary",
-  },
-  {
-    id: 2,
-    payer: "XYZ Client",
-    amount: 1200,
-    date: "2025-04-02",
-    note: "Project payment",
-  },
-];
+const expenseprefix= "expenses/";
 
-export const fetchIncomes = async (): Promise<IncomeItem[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([...incomes]);
-    }, 500);
-  });
+export const fetchExpenses = async (body: any) => {
+  try {
+    const { token } = useStore.getState();
+    if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    const response = await api.post(`${expenseprefix}`, body);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching expenses:', error);
+    throw error;
+  }
 };
 
-export const addIncome = async (
-  income: Omit<IncomeItem, "id">
-): Promise<IncomeItem> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const newIncome = {
-        ...income,
-        id: Math.max(0, ...incomes.map((i) => i.id)) + 1,
-      };
-      incomes.push(newIncome);
-      resolve(newIncome);
-    }, 500);
-  });
+export const addExpenseWithBreakdown = async (expenseData: any) => {
+  try {
+    const { token } = useStore.getState();
+    if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    const response = await api.post(`${expenseprefix}/add`, expenseData );
+    return response.data;
+  } catch (error) {
+    console.error("Error adding expense:", error);
+    throw error;
+  }
 };
-
-export const updateIncome = async (income: IncomeItem): Promise<IncomeItem> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      incomes = incomes.map((item) => (item.id === income.id ? income : item));
-      resolve(income);
-    }, 500);
-  });
-};
-
-export const deleteIncome = async (id: number): Promise<void> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      incomes = incomes.filter((item) => item.id !== id);
-      resolve();
-    }, 500);
-  });
-};
-
 
 export default api;

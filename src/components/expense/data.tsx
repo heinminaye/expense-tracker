@@ -4,6 +4,7 @@ import ExpenseModal from "./expensemodal";
 import SinglePrintReceipt from "./singleprintreceipt";
 import PrintAllReceipts from "./printallreceipts";
 import { ExpenseItem } from "../types/expense";
+import useStore from "../../store";
 import {
   FaChevronDown,
   FaChevronRight,
@@ -14,63 +15,15 @@ import {
   FaAngleLeft,
   FaAngleRight,
 } from "react-icons/fa";
+import { toast } from "sonner";
+import api, { addExpenseWithBreakdown, fetchExpenses } from "../../libs/api";
+import { set } from "react-hook-form";
 
 const ITEMS_PER_PAGE = 10;
 
-const initialDataItems: ExpenseItem[] = [
-  {
-    id: 1,
-    category: "Food",
-    expense: 20,
-    date: "2025-04-01",
-    detail: "Lunch at a restaurant with colleagues",
-    breakdownItems: [
-      {
-        name: "Burger",
-        price: 10,
-        quantity: 2,
-      },
-      { name: "Drink", price: 5, quantity: 2 },
-    ],
-  },
-  {
-    id: 2,
-    category: "General",
-    expense: 10,
-    date: "2025-04-02",
-    detail: "ဟယ်လို",
-    breakdownItems: [{ name: "Bus ticket", price: 5, quantity: 2 }],
-  },
-  {
-    id: 3,
-    category: "General",
-    expense: 50,
-    date: "2025-04-03",
-    detail: "Weekly groceries",
-    breakdownItems: [
-      { name: "Vegetables", price: 20, quantity: 1 },
-      { name: "Meat", price: 30, quantity: 1 },
-    ],
-  },
-  {
-    id: 4,
-    category: "Fuel",
-    expense: 15,
-    date: "2025-04-04",
-    detail: "Movie ticket for new release",
-    breakdownItems: [{ name: "Ticket", price: 15, quantity: 1 }],
-  },
-  {
-    id: 5,
-    category: "Fuel",
-    expense: 120,
-    date: "2025-04-05",
-    detail: "Electricity bill payment",
-  },
-];
 
 const Data: React.FC = () => {
-  const [expenses, setExpenses] = useState<ExpenseItem[]>(initialDataItems);
+  const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [dateRange, setDateRange] = useState<string>("");
   const [showModal, setShowModal] = useState<boolean>(false);
   const [itemToPrint, setItemToPrint] = useState<ExpenseItem | null>(null);
@@ -81,6 +34,7 @@ const Data: React.FC = () => {
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
   const filteredItems = expenses.filter((item) => {
     // Keep your existing filter logic (date range, search term, etc.)
@@ -99,7 +53,7 @@ const Data: React.FC = () => {
       if (!term) return true;
       return (
         item.category.toLowerCase().includes(term) ||
-        (item.detail || "").toLowerCase().includes(term) ||
+        (item.note || "").toLowerCase().includes(term) ||
         (item.breakdownItems || []).some((breakdown) =>
           breakdown.name.toLowerCase().includes(term)
         )
@@ -109,11 +63,13 @@ const Data: React.FC = () => {
   });
 
   useEffect(() => {
+    
     const allSelected =
       filteredItems.length > 0 &&
       filteredItems.every((item) => selectedItems.includes(item.id));
     setIsAllSelected(allSelected);
-  }, [selectedItems, filteredItems]);
+    if (dateRange) fetchData();
+  }, [searchTerm, dateRange, currentPage]);
 
   const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
   const paginatedItems = filteredItems.slice(
@@ -125,6 +81,77 @@ const Data: React.FC = () => {
     (sum, item) => sum + item.expense,
     0
   );
+
+  const { user } = useStore.getState();
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const [startDateStr, endDateStr] = dateRange.split(" to ");
+      const startDate = new Date(startDateStr);
+      const endDate = new Date(endDateStr);
+     
+      const body = {
+        user_id: user,
+        search_value: searchTerm,
+        date_type: dateRange ? "custom" : "all",
+        start_date: startDate || undefined,
+        end_date: endDate || undefined,
+        page: currentPage,
+      };
+
+      const response = await fetchExpenses(body);
+      console.log(response)
+      if (response.returncode === "200") {
+        setExpenses(response.data);
+      } else {
+        toast.error(response.message || "Failed to fetch expenses");
+      }
+    } catch (err) {
+      toast.error("Failed to connect to the server");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddExpense = async (newExpense: Omit<ExpenseItem, "id">) => {
+    try {
+      setIsLoading(true);
+      
+      // Prepare the data for API submission
+      const expenseData = {
+        ...newExpense,
+        user_id: user,
+        breakdownItems: newExpense.breakdownItems?.map(item => ({
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity
+        })) || []
+      };
+      console.log(expenseData)
+  
+      const response = await addExpenseWithBreakdown(expenseData);
+      
+      if (response.returncode === "200") {
+        setExpenses(prev => [response.data, ...prev]);
+        setShowModal(false);
+        setCurrentPage(1);
+        toast.success("Expense added successfully");
+        
+        return response.data;
+      } else {
+        toast.error(response.message || "Failed to fetch expenses");
+        return null;
+      }
+    } catch (error: any) {
+      console.error("Error adding expense:", error);
+      toast.error(error.message || "Failed to connect to server");
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   const DOTS = "...";
 
   function getPaginationRange({
@@ -174,18 +201,6 @@ const Data: React.FC = () => {
     return [];
   }
 
-  const handleAddExpense = (newExpense: Omit<ExpenseItem, "id">) => {
-    const newItem: ExpenseItem = {
-      id:
-        expenses.length > 0
-          ? Math.max(...expenses.map((item) => item.id)) + 1
-          : 1, // Auto-increment ID
-      ...newExpense,
-    };
-    setExpenses((prev) => [newItem, ...prev]);
-    setShowModal(false);
-    setCurrentPage(1);
-  };
 
   const handleUpdateExpense = (updatedExpense: ExpenseItem) => {
     setExpenses(
@@ -403,7 +418,7 @@ const Data: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-slate-800">
                 {paginatedItems.length > 0 ? (
-                  paginatedItems.map((item) => (
+                  paginatedItems.map((item,index) => (
                     <React.Fragment key={item.id}>
                       {/* Main Row */}
                       <tr
@@ -440,7 +455,7 @@ const Data: React.FC = () => {
                           />
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
-                          {item.id}
+                          {index+1}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3">
                           <div className="flex items-center">
@@ -546,7 +561,7 @@ const Data: React.FC = () => {
                           <td colSpan={7} className="px-4 py-3">
                             <div className="ml-8 mr-14 pl-3">
                               <div className="px-3 py-2 mb-2 text-sm font-medium rounded-sm bg-gray-50 dark:bg-gray-700 border-l-4 border-blue-600 italic text-gray-800 dark:text-white shadow-sm">
-                                <strong>Notes:</strong> {item.detail || "-"}
+                                <strong>Notes:</strong> {item.note || "-"}
                               </div>
                               {/* Breakdown Items */}
                               {item.breakdownItems &&

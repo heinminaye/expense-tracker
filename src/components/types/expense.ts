@@ -3,7 +3,7 @@ export interface ExpenseItem {
     category: string;
     expense: number;
     date: string;
-    detail: string;
+    note?: string;
     breakdownItems?: BreakdownItem[];
   }
   

@@ -291,18 +291,18 @@ const SinglePrintReceipt: React.FC<SinglePrintReceiptProps> = ({ expense, onClos
               </thead>
               <tbody>
                 <tr>
-                  <td><span class="id-badge">${expense.id}</span></td>
+                  <td><span class="id-badge">${1}</span></td>
                   <td>${expense.category}</td>
                   <td>${formatDate(expense.date)}</td>
                   <td>${expense.expense.toLocaleString()}</td>
                 </tr>
                 ${
-                  expense.detail
+                  expense.note
                     ? `
                       <tr>
                         <td colspan="4">
                           <div class="notes-cell">
-                            <strong>Notes:</strong> ${expense.detail}
+                            <strong>Notes:</strong> ${expense.note}
                           </div>
                         </td>
                       </tr>

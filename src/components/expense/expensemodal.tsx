@@ -18,7 +18,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
     category: "",
     expense: 0,
     date: new Date().toISOString().split("T")[0],
-    detail: "",
+    note: "",
     breakdownItems: [{ name: "", price: 0, quantity: 1 }],
   },
   isEditMode = false,
@@ -262,9 +262,9 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                   </label>
                   <div className="flex-1">
                     <textarea
-                      value={newExpense.detail}
+                      value={newExpense.note}
                       onChange={(e) =>
-                        setNewExpense({ ...newExpense, detail: e.target.value })
+                        setNewExpense({ ...newExpense, note: e.target.value })
                       }
                       className="w-full h-full resize-none py-2 px-3 rounded-md border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm border-gray-300 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
                       placeholder="Additional notes about this expense"
