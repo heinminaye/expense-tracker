@@ -8,7 +8,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { toast } from 'sonner'
 import Input from "../../components/input";
 import Button from "../../components/button";
-import api from "../../libs/api";
+import api, { signIn } from "../../libs/api";
 
 const SignInSchema = zod.object({
   user_id: zod
@@ -21,7 +21,7 @@ const SignInSchema = zod.object({
 });
 
 function SignIn() {
-  const { user, setCredentails } = useStore((state) => state);
+  const { user, setCredentials } = useStore((state) => state);
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
@@ -41,52 +41,25 @@ function SignIn() {
     }
   }, [user, navigate]);
 
-  // const fakeApiPost = (url, data) => {
-  //   return new Promise((resolve) => {
-  //     setTimeout(() => {
-  //       if (data.username === 'admin' && data.password === 'password123') {
-  //         resolve({
-  //           data: {
-  //             returncode: '200', 
-  //             message: 'Login successful!',
-  //             data: {
-  //               user_id: 'admin@gmail.com',
-  //             },
-  //             token: 'fakeJwtToken123',
-  //           },
-  //         });
-  //       } else {
-  //         resolve({
-  //           data: {
-  //             returncode: '400',
-  //             message: 'Invalid username or password',
-  //           },
-  //         });
-  //       }
-  //     }, 1000); 
-  //   });
-  // };
-
   const onSubmit = async (data: any) => {
     setLoading(true);
     try {
-      const { data: response } = await api.post('/auth/signin', data);
-      // const { data: response } = await fakeApiPost('/auth/signin', data);
-      console.log(response)
-      if (response.returncode == '200') {
-        toast.success(response.message)
-        localStorage.setItem("user", response.data['user_id']);
+      const response = await signIn(data);
+      if (response.returncode == "200") {
+        toast.success(response.message);
+        localStorage.setItem("user", response.data["user_id"]);
         localStorage.setItem("token", response.token);
-        setCredentails(response.data['user_id'],response.token);
-        setTimeout(() => {
-          reset();
-          navigate("/");
-        }, 2000);
+        setCredentials(response.data["user_id"], response.token);
+        // setTimeout(() => {
+        //   reset();
+        //   navigate("/");
+        // }, 4000);
       } else {
-        toast.error(response.message)
+        toast.error(response.message);
       }
     } catch (error) {
-      toast.error("Something went wrong. Please try again.")
+      toast.error("Something went wrong. Please try again.");
+      setLoading(false);
     } finally {
       setLoading(false);
     }
@@ -136,13 +109,13 @@ function SignIn() {
               {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
             </div>
 
-            <div className="mb-6">
+            {/* <div className="mb-6">
               <div className="text-right">
                 <a href="#" className="text-sm text-blue-500 hover:underline">
                   Forgot your password?
                 </a>
               </div>
-            </div>
+            </div> */}
 
             <Button type="submit" disabled={loading}>
               {loading ? "Signing In..." : "Sign In"}

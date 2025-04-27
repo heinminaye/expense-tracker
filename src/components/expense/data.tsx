@@ -16,7 +16,7 @@ import {
   FaAngleRight,
 } from "react-icons/fa";
 import { toast } from "sonner";
-import api, { addExpenseWithBreakdown, fetchExpenses, softDeleteExpenses } from "../../libs/api";
+import api, { addExpenseWithBreakdown, editExpenseWithBreakdown, fetchExpenses, softDeleteExpenses } from "../../libs/api";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -156,14 +156,43 @@ const Data: React.FC = () => {
     return [];
   };
 
-  const handleUpdateExpense = (updatedExpense: ExpenseItem) => {
-    setExpenses(
-      expenses.map((item) =>
-        item.id === updatedExpense.id ? updatedExpense : item
-      )
-    );
-    setEditingItem(null);
-    fetchData(); // Refresh data to get updated totals
+  const handleUpdateExpense = async (updatedExpense: ExpenseItem) => {
+    try {
+      setIsLoading(true);
+      
+      // Prepare the data for the API call
+      const expenseData = {
+        ...updatedExpense,
+        user_id: user,
+        breakdownItems: updatedExpense.breakdownItems?.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity
+        })) || []
+      };
+  
+      const response = await editExpenseWithBreakdown(expenseData);
+      
+      if (response.returncode === "200") {
+        // Update the local state with the updated expense
+        setExpenses(prev =>
+          prev.map(item => 
+            item.id === updatedExpense.id ? response.data : item
+          )
+        );
+        setEditingItem(null);
+        toast.success(response.message || "Expense updated successfully");
+        fetchData(); 
+      } else {
+        toast.error(response.message || "Failed to update expense");
+      }
+    } catch (error: any) {
+      console.error("Error updating expense:", error);
+      toast.error(error.message || "Failed to connect to server");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDeleteExpense = async (id: string) => {
@@ -248,7 +277,7 @@ const Data: React.FC = () => {
     setShowPrintAll(true);
   };
 
-  const toggleRowExpand = (id: string) => {
+  const toggleRowExpand = (id:any) => {
     setExpandedRows((prev) => ({
       ...prev,
       [id]: !prev[id],
@@ -428,9 +457,9 @@ const Data: React.FC = () => {
                             className="text-gray-500 dark:text-gray-400 h-3 w-4 text-sm cursor-pointer"
                           >
                             {expandedRows[item.id] ? (
-                              <FaChevronDown />
+                              <FaChevronDown onClick={() => toggleRowExpand(item.id)}/>
                             ) : (
-                              <FaChevronRight />
+                              <FaChevronRight onClick={() => toggleRowExpand(item.id)}/>
                             )}
                           </button>
                         </td>

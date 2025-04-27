@@ -1,5 +1,5 @@
 export interface ExpenseItem {
-    id: number;
+    id: string;
     category: string;
     expense: number;
     date: string;
@@ -7,7 +7,8 @@ export interface ExpenseItem {
     breakdownItems?: BreakdownItem[];
   }
   
-  export interface BreakdownItem {
+export interface BreakdownItem {
+    id: string;
     name: string;
     price: number;
     quantity: number | string;

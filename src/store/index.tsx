@@ -20,18 +20,26 @@ const useStore = create((set) => ({
     set({ theme });
   },
 
-  setCredentails: (user, token) => {
+  setCredentials: (user, token) => {
     localStorage.setItem("user", user);
     localStorage.setItem("token", token);
     setAuthToken(token);
     set({ user, token });
   },
 
+  // Added clearToken function
+  clearToken: () => {
+    localStorage.removeItem("token");
+    setAuthToken(null);
+    set({ token: null });
+  },
+
+  // Updated signOut to use clearToken
   signOut: () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     setAuthToken(null);
-    set({ user: null, token: null });
+    set({ user: null, token:null });
   },
 
   toggleSidebar: () =>
