@@ -62,6 +62,7 @@ const Data: React.FC = () => {
         setTotalPages(response.totalPages || 1);
         setTotalItems(response.totalRows || 0);
         setTotalAmount(response.totalAmount || 0);
+        toast.success(response.message);
       } else {
         toast.error(response.message || "Failed to fetch expenses");
       }
@@ -300,7 +301,7 @@ const Data: React.FC = () => {
               <input
                 type="text"
                 placeholder="Search..."
-                className="w-full pl-9 pr-3 py-2 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-9 pr-3 py-2 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -686,7 +687,7 @@ const Data: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => setShowModal(true)}
-                            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-offset-2 focus:ring-blue-500"
                           >
                             <FaPlus className="-ml-1 mr-2 h-4 w-4" />
                             Add Expense

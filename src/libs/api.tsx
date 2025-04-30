@@ -1,5 +1,6 @@
 import axios from "axios";
 import useStore from "../store";
+import { toast } from "sonner";
 
 const API_URL = "http://localhost:3030/api";
 
@@ -62,9 +63,75 @@ export const signIn = async (credentials: { username: string; password: string }
   }
 };
 
+const catgoryPrefix = "categories";
 const expensePrefix = "expenses";
 
+// Category API functions
+
+export const fetchCategories = async (body: any) => {
+  try {
+    const { token } = useStore.getState();
+    if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    const response = await api.post(catgoryPrefix, body);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 301) {
+      clearAuthData();
+      toast.error("Session expired. Please log in again.");
+    }
+    console.error('Error fetching categories:', error);
+    throw error;
+  }
+};
+
+export const addCategory = async (body: any) => {
+  try {
+    const { token } = useStore.getState();
+    if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    const response = await api.post(`${catgoryPrefix}/add`, body);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 301) {
+      clearAuthData();
+      toast.error("Session expired. Please log in again.");
+    }
+    console.error('Error adding category:', error);
+    throw error;
+  }
+};
+export const updateCategory = async (body: any) => {
+  try {
+    const { token } = useStore.getState();
+    if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    const response = await api.post(`${catgoryPrefix}/add`, body);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 301) {
+      clearAuthData();
+      toast.error("Session expired. Please log in again.");
+    }
+    console.error('Error adding category:', error);
+    throw error;
+  }
+};
+export const deleteCategory = async (body: any) => {
+  try {
+    const { token } = useStore.getState();
+    if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    const response = await api.post(`${catgoryPrefix}/add`, body);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 301) {
+      clearAuthData();
+      toast.error("Session expired. Please log in again.");
+    }
+    console.error('Error adding category:', error);
+    throw error;
+  }
+};
+
 // Expense API functions
+
 export const fetchExpenses = async (body: any) => {
   try {
     const { token } = useStore.getState();
@@ -74,6 +141,7 @@ export const fetchExpenses = async (body: any) => {
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 301) {
       clearAuthData();
+      toast.error("Session expired. Please log in again.");
     }
     console.error('Error fetching expenses:', error);
     throw error;
@@ -104,6 +172,7 @@ export const editExpenseWithBreakdown = async (expenseData: any) => {
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 301) {
       clearAuthData();
+      toast.error("Session expired. Please log in again.");
     }
     console.error("Error editing expense:", error);
     throw error;
@@ -119,6 +188,7 @@ export const softDeleteExpenses = async (expenseData: any) => {
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 301) {
       clearAuthData();
+      toast.error("Session expired. Please log in again.");
     }
     console.error('Error soft deleting expenses:', error);
     throw error;
@@ -134,6 +204,7 @@ export const deleteBreakdownItem = async (data: { user_id: string,breakdown_item
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 301) {
       clearAuthData();
+      toast.error("Session expired. Please log in again.");
     }
     console.error('Error deleting breakdown item:', error);
     throw error;
