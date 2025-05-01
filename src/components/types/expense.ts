@@ -1,6 +1,7 @@
 export interface ExpenseItem {
     id: string;
     category: string;
+    category_id: string;
     expense: number;
     date: string;
     note?: string;

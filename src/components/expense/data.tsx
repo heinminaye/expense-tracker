@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import api, { addExpenseWithBreakdown, editExpenseWithBreakdown, fetchExpenses, softDeleteExpenses } from "../../libs/api";
 
 const ITEMS_PER_PAGE = 10;
+const DOTS = "...";
 
 const Data: React.FC = () => {
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
@@ -43,26 +44,32 @@ const Data: React.FC = () => {
     setIsLoading(true);
     try {
       const [startDateStr, endDateStr] = dateRange.split(" to ");
-      const startDate = dateRange ? new Date(startDateStr) : undefined;
-      const endDate = dateRange ? new Date(endDateStr) : undefined;
-
       const body = {
         user_id: user,
         search_value: searchTerm,
         date_type: dateRange ? "custom" : "all",
-        start_date: startDate,
-        end_date: endDate,
+        start_date: dateRange ? startDateStr : undefined,
+        end_date: dateRange ? endDateStr : undefined,
         page: currentPage
       };
 
       const response = await fetchExpenses(body);
       
       if (response.returncode === "200") {
-        setExpenses(response.data);
+        // Format the data to ensure consistent structure
+        const formattedExpenses = response.data.map(expense => ({
+          ...expense,
+          category: expense.category|| "Uncategorized", // Handle both object and string cases
+          breakdownItems: expense.breakdownItems?.map(item => ({
+            ...item,
+            name: item.name || "Unnamed Item" // Ensure name is always a string
+          })) || []
+        }));
+
+        setExpenses(formattedExpenses);
         setTotalPages(response.totalPages || 1);
         setTotalItems(response.totalRows || 0);
         setTotalAmount(response.totalAmount || 0);
-        toast.success(response.message);
       } else {
         toast.error(response.message || "Failed to fetch expenses");
       }
@@ -75,8 +82,10 @@ const Data: React.FC = () => {
   };
 
   useEffect(() => {
-    if(dateRange)fetchData();
-  }, [searchTerm, dateRange, currentPage]);
+    if (user) {
+      fetchData();
+    }
+  }, [searchTerm, dateRange, currentPage, user]);
 
   const handleAddExpense = async (newExpense: Omit<ExpenseItem, "id">) => {
     try {
@@ -99,22 +108,143 @@ const Data: React.FC = () => {
         setShowModal(false);
         setCurrentPage(1);
         toast.success("Expense added successfully");
-        fetchData(); // Refresh data to get updated totals
-        return response.data;
+        fetchData();
       } else {
         toast.error(response.message || "Failed to add expense");
-        return null;
       }
     } catch (error: any) {
       console.error("Error adding expense:", error);
       toast.error(error.message || "Failed to connect to server");
-      return null;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const DOTS = "...";
+  const handleUpdateExpense = async (updatedExpense: ExpenseItem) => {
+    try {
+      setIsLoading(true);
+      
+      const expenseData = {
+        ...updatedExpense,
+        user_id: user,
+        breakdownItems: updatedExpense.breakdownItems?.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity
+        })) || []
+      };
+  
+      const response = await editExpenseWithBreakdown(expenseData);
+      
+      if (response.returncode === "200") {
+        setExpenses(prev =>
+          prev.map(item => 
+            item.id === updatedExpense.id ? response.data : item
+          )
+        );
+        setEditingItem(null);
+        toast.success(response.message || "Expense updated successfully");
+        fetchData(); 
+      } else {
+        toast.error(response.message || "Failed to update expense");
+      }
+    } catch (error: any) {
+      console.error("Error updating expense:", error);
+      toast.error(error.message || "Failed to connect to server");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    try {
+      setIsLoading(true);
+      const response = await softDeleteExpenses({
+        user_id: user,
+        expense_ids: [id], 
+      });
+  
+      if (response.returncode === "200") {
+        setExpenses(prev => prev.filter(item => item.id !== id));
+        setSelectedItems(prev => prev.filter(itemId => itemId !== id));
+        toast.success(response.message || "Expense deleted successfully");
+        fetchData();
+      } else {
+        toast.error(response.message || "Failed to delete expense");
+      }
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      toast.error("Failed to connect to server");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMultiDelete = async () => {
+    if (selectedItems.length === 0) return;
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${selectedItems.length} selected items?`
+    );
+  
+    if (!confirmed) return;
+    try {
+      setIsLoading(true);
+
+      const response = await softDeleteExpenses({
+        user_id: user,
+        expense_ids: selectedItems,
+      });
+  
+      if (response.returncode === "200") {
+        setExpenses((prev) =>
+          prev.filter((item) => !selectedItems.includes(item.id))
+        );
+        setSelectedItems([]);
+        setIsAllSelected(false);
+        toast.success(response.message || "Expenses deleted successfully");
+        fetchData();
+      } else {
+        toast.error(response.message || "Failed to delete expenses");
+      }
+    } catch (error) {
+      console.error("Error deleting expenses:", error);
+      toast.error("Failed to connect to server");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(expenses.map((item) => item.id));
+    }
+    setIsAllSelected(!isAllSelected);
+  };
+
+  const toggleSelectItem = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedItems((prev) =>
+      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
+    );
+  };
+
+  const handlePrintSelected = () => {
+    if (selectedItems.length === 0) return;
+    const itemsToPrint = expenses.filter((item) =>
+      selectedItems.includes(item.id)
+    );
+    setShowPrintAll(true);
+  };
+
+  const toggleRowExpand = (id: string) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
   const getPaginationRange = () => {
     const siblingCount = 1;
@@ -157,134 +287,6 @@ const Data: React.FC = () => {
     return [];
   };
 
-  const handleUpdateExpense = async (updatedExpense: ExpenseItem) => {
-    try {
-      setIsLoading(true);
-      
-      // Prepare the data for the API call
-      const expenseData = {
-        ...updatedExpense,
-        user_id: user,
-        breakdownItems: updatedExpense.breakdownItems?.map(item => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity
-        })) || []
-      };
-  
-      const response = await editExpenseWithBreakdown(expenseData);
-      
-      if (response.returncode === "200") {
-        // Update the local state with the updated expense
-        setExpenses(prev =>
-          prev.map(item => 
-            item.id === updatedExpense.id ? response.data : item
-          )
-        );
-        setEditingItem(null);
-        toast.success(response.message || "Expense updated successfully");
-        fetchData(); 
-      } else {
-        toast.error(response.message || "Failed to update expense");
-      }
-    } catch (error: any) {
-      console.error("Error updating expense:", error);
-      toast.error(error.message || "Failed to connect to server");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeleteExpense = async (id: string) => {
-    try {
-      setIsLoading(true);
-      const response = await softDeleteExpenses({
-        user_id: user,
-        expense_ids: [id], 
-      });
-  
-      if (response.returncode === "200") {
-        setExpenses(prev => prev.filter(item => item.id !== id));
-        setSelectedItems(prev => prev.filter(itemId => itemId !== id));
-        toast.success(response.message || "Expense deleted successfully");
-        fetchData(); // Refresh data to get updated totals
-      } else {
-        toast.error(response.message || "Failed to delete expense");
-      }
-    } catch (error) {
-      console.error("Error deleting expense:", error);
-      toast.error("Failed to connect to server");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleMultiDelete = async () => {
-    if (selectedItems.length === 0) return;
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${selectedItems.length} selected items?`
-    );
-  
-    if (!confirmed) return;
-    try {
-      setIsLoading(true);
-
-      const response = await softDeleteExpenses({
-        user_id: user,
-        expense_ids: selectedItems,
-      });
-  
-      if (response.returncode === "200") {
-        setExpenses((prev) =>
-          prev.filter((item) => !selectedItems.includes(item.id))
-        );
-        setSelectedItems([]);
-        setIsAllSelected(false);
-        toast.success(response.message || "Expenses deleted successfully");
-        fetchData(); // Refresh data to get updated totals
-      } else {
-        toast.error(response.message || "Failed to delete expenses");
-      }
-    } catch (error) {
-      console.error("Error deleting expenses:", error);
-      toast.error("Failed to connect to server");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const toggleSelectAll = () => {
-    if (isAllSelected) {
-      setSelectedItems([]);
-    } else {
-      setSelectedItems(expenses.map((item) => item.id));
-    }
-    setIsAllSelected(!isAllSelected);
-  };
-
-  const toggleSelectItem = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedItems((prev) =>
-      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
-    );
-  };
-
-  const handlePrintSelected = () => {
-    if (selectedItems.length === 0) return;
-    const itemsToPrint = expenses.filter((item) =>
-      selectedItems.includes(item.id)
-    );
-    setShowPrintAll(true);
-  };
-
-  const toggleRowExpand = (id:any) => {
-    setExpandedRows((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
-
   const paginationRange = getPaginationRange();
 
   return (
@@ -297,7 +299,7 @@ const Data: React.FC = () => {
               <DateRangePicker value={dateRange} onChange={setDateRange} />
             </div>
             <div className="relative w-full sm:w-52">
-              <FaSearch className="absolute left-3 top-2.5 h-4 w-4 text-gray-400 " />
+              <FaSearch className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search..."
@@ -307,12 +309,11 @@ const Data: React.FC = () => {
               />
             </div>
             <button className="flex items-center gap-1 px-3 py-2 border rounded-md text-sm text-gray-700 dark:text-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
-              <FaFilter className="h-4 w-4 text-gray-400 " />
+              <FaFilter className="h-4 w-4 text-gray-400" />
               <span className="sm:inline">Filters</span>
             </button>
           </div>
 
-          {/* Right section: Action buttons */}
           <div className="flex flex-wrap items-center gap-2 justify-end w-full lg:w-auto">
             {selectedItems.length > 0 && (
               <button
@@ -346,7 +347,7 @@ const Data: React.FC = () => {
               <span className="sm:inline">Add</span>
             </button>
 
-            {expenses.length > 0 ? (
+            {expenses.length > 0 && (
               <button
                 onClick={() => setShowPrintAll(true)}
                 className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 transition-all"
@@ -354,7 +355,7 @@ const Data: React.FC = () => {
                 <FaPrint className="h-4 w-4" />
                 <span className="sm:inline">Print All</span>
               </button>
-            ) : null}
+            )}
 
             {selectedItems.length > 0 && (
               <button
@@ -454,13 +455,16 @@ const Data: React.FC = () => {
                       >
                         <td className="whitespace-nowrap text-center items-center pl-4 sm:px-4">
                           <button
-                            onClick={() => toggleRowExpand(item.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleRowExpand(item.id);
+                            }}
                             className="text-gray-500 dark:text-gray-400 h-3 w-4 text-sm cursor-pointer"
                           >
                             {expandedRows[item.id] ? (
-                              <FaChevronDown onClick={() => toggleRowExpand(item.id)}/>
+                              <FaChevronDown />
                             ) : (
-                              <FaChevronRight onClick={() => toggleRowExpand(item.id)}/>
+                              <FaChevronRight />
                             )}
                           </button>
                         </td>
@@ -605,7 +609,7 @@ const Data: React.FC = () => {
                                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-slate-800">
                                       {item.breakdownItems.map((breakdown, idx) => (
                                         <tr
-                                          key={breakdown.id}
+                                          key={breakdown.id || `breakdown-${idx}`}
                                           className="hover:bg-gray-50 dark:hover:bg-slate-900 transition-colors"
                                         >
                                           <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
@@ -663,7 +667,7 @@ const Data: React.FC = () => {
                     <td colSpan={7} className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center justify-center">
                         <svg
-                          className="h-12 w-12 text-gray-400 "
+                          className="h-12 w-12 text-gray-400"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -705,14 +709,12 @@ const Data: React.FC = () => {
           {expenses.length > 0 && (
             <div className="sticky bottom-0 z-20 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 sm:px-6 shadow">
               <div className="flex flex-col items-center sm:flex-row sm:items-center sm:justify-between gap-4">
-                {/* Pagination Info */}
                 <div className="text-sm text-gray-700 dark:text-gray-300">
                   Showing{" "}
                   <span className="font-medium">
                     {(currentPage - 1) * ITEMS_PER_PAGE + 1}
                   </span>{" "}
-                  -
-                  {" "}
+                  to{" "}
                   <span className="font-medium">
                     {Math.min(
                       currentPage * ITEMS_PER_PAGE,
@@ -723,7 +725,6 @@ const Data: React.FC = () => {
                   results
                 </div>
 
-                {/* Pagination Buttons */}
                 <div className="inline-flex flex-wrap justify-center sm:justify-normal items-center gap-1">
                   <button
                     onClick={() =>
@@ -735,15 +736,18 @@ const Data: React.FC = () => {
                     <FaAngleLeft />
                   </button>
 
-                  {paginationRange.map((page, idx) =>
-                    page === "..." ? (
-                      <span
-                        key={idx}
-                        className="px-2 py-1.5 text-sm text-gray-400 dark:text-gray-500"
-                      >
-                        ...
-                      </span>
-                    ) : (
+                  {paginationRange.map((page, idx) => {
+                    if (page === DOTS) {
+                      return (
+                        <span
+                          key={`dots-${idx}`}
+                          className="px-2 py-1.5 text-sm text-gray-400 dark:text-gray-500"
+                        >
+                          {DOTS}
+                        </span>
+                      );
+                    }
+                    return (
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page as number)}
@@ -755,8 +759,8 @@ const Data: React.FC = () => {
                       >
                         {page}
                       </button>
-                    )
-                  )}
+                    );
+                  })}
 
                   <button
                     onClick={() =>

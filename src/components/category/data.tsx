@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaPlus, FaSearch } from "react-icons/fa";
+import { FaPlus, FaSearch, FaTimes } from "react-icons/fa";
 import {
   FiPlus,
   FiEdit2,
@@ -18,14 +18,7 @@ import {
   deleteCategory as deleteCategoryApi 
 } from "../../libs/api";
 import useStore from "../../store";
-
-interface Category {
-  id: string;
-  name: string;
-  parentId: string | null;
-  children?: Category[];
-  isExpanded?: boolean;
-}
+import { Category } from "../types/category";
 
 const CategoryManager: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -37,6 +30,7 @@ const CategoryManager: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [addingSubcategoryFor, setAddingSubcategoryFor] = useState<string | null>(null);
   const { user } = useStore.getState();
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
   // API Calls
   const api = {
@@ -157,6 +151,13 @@ const CategoryManager: React.FC = () => {
   useEffect(() => {
     api.fetchCategories();
   }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Category Tree Operations
   const categoryTree = {
@@ -344,22 +345,33 @@ const CategoryManager: React.FC = () => {
   };
 
   // Search and Filter
-  const search = {
-    flattenCategories: (cats: Category[]): Category[] => {
+  const search = (() => {
+    const flattenCategories = (cats: Category[]): Category[] => {
       return cats.reduce<Category[]>((acc, cat) => [
         ...acc,
         cat,
-        ...(cat.children ? search.flattenCategories(cat.children) : [])
+        ...(cat.children ? flattenCategories(cat.children) : [])
       ], []);
-    },
+    };
 
-    filteredCategories: searchTerm
-      ? search.flattenCategories(categories).filter(cat =>
-          cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          cat.id.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      : categories
-  };
+    const highlightMatch = (text: string, query: string) => {
+      if (!query) return text;
+      const regex = new RegExp(`(${query})`, 'gi');
+      return text.split(regex).map((part, i) => 
+        regex.test(part) ? <mark key={i} className="bg-yellow-200 dark:bg-yellow-800">{part}</mark> : part
+      );
+    };
+
+    return {
+      flattenCategories,
+      filteredCategories: debouncedSearchTerm
+        ? flattenCategories(categories).filter(cat =>
+            cat.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+          )
+        : [],
+      highlightMatch
+    };
+  })();
 
   // Category Item Component
   const CategoryItem: React.FC<{
@@ -415,78 +427,98 @@ const CategoryManager: React.FC = () => {
 
       {/* Regular category item (shown when not editing) */}
       {!isEditing && (
-        <div
-          className={`flex items-center py-2 px-2 transition-colors duration-150 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50`}
-          style={{ 
-            marginLeft: `${level * 12}px`,
-            marginBottom: '4px'
-          }}
-        >
-          {/* Expand/collapse toggle */}
-          {hasChildren ? (
-            <button
-              onClick={() => categoryTree.toggleExpand(category.id)}
-              className="p-1 mr-2 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"
-            >
-              {isExpanded ? (
-                <FiChevronDown size={18} />
-              ) : (
-                <FiChevronRight size={18} />
-              )}
-            </button>
-          ) : (
-            <div className="w-9" />
-          )}
-
-          {/* Category content */}
-          <div className={`flex-1 flex items-center justify-between p-1 rounded-lg`}>
-            <div className="flex flex-col min-w-0">
-              <span className={`font-medium ${isMainCategory ? 'text-gray-800 dark:text-gray-100' : 'text-gray-600 dark:text-gray-300'} truncate`}>
-                {category.name}
-                {!isMainCategory && (
-                  <span className="ml-2 text-xs text-gray-400">(subcategory)</span>
+          <div
+            className={`flex items-center py-2 px-3 transition-colors duration-150 rounded-lg ${
+              isSearching 
+                ? 'bg-white dark:bg-gray-750 shadow-sm dark:shadow-none mb-2'
+                : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'
+            }`}
+            style={{ 
+              marginLeft: `${level * 12}px`,
+              marginBottom: isSearching ? '8px' : '4px'
+            }}
+          >
+            {/* Expand/collapse toggle - hidden during search */}
+            {!isSearching && (hasChildren ? (
+              <button
+                onClick={() => categoryTree.toggleExpand(category.id)}
+                className="p-1 mr-2 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"
+              >
+                {isExpanded ? (
+                  <FiChevronDown size={18} />
+                ) : (
+                  <FiChevronRight size={18} />
                 )}
-              </span>
-            </div>
+              </button>
+            ) : (
+              <div className="w-9" />
+            ))}
 
-            <div className="flex gap-1">
-              {isMainCategory && (
+            {/* Category content - enhanced for search */}
+            <div className={`flex-1 flex items-center justify-between p-1 rounded-lg`}>
+              <div className="flex flex-col min-w-0">
+                <span className={`font-medium ${
+                  isMainCategory 
+                    ? 'text-gray-800 dark:text-gray-100' 
+                    : 'text-gray-600 dark:text-gray-300'
+                } truncate`}>
+                  {isSearching 
+                    ? search.highlightMatch(category.name, debouncedSearchTerm)
+                    : category.name}
+                  {!isMainCategory && !isSearching && (
+                    <span className="ml-2 text-xs text-gray-400">(subcategory)</span>
+                  )}
+                </span>
+                {isSearching && category.parentId && (
+                  <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Parent: {categoryTree.findCategory(category.parentId, categories)?.name || 'Main'}
+                  </span>
+                )}
+              </div>
+
+              {/* Action buttons - simplified during search */}
+              <div className="flex gap-1">
+                {!isSearching && isMainCategory && (
+                  <button
+                    onClick={() => handlers.startAddingSubcategory(category.id)}
+                    className="p-2 text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-400 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
+                    title="Add subcategory"
+                    disabled={isLoading}
+                  >
+                    <FiPlus size={16} />
+                  </button>
+                )}
+                {!isSearching && (
+                  <>
+                    <button
+                      onClick={() => handlers.duplicateCategory(category)}
+                      className="p-2 text-purple-500 hover:text-purple-600 dark:text-purple-400 dark:hover:text-purple-400 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
+                      title="Duplicate"
+                      disabled={isLoading}
+                    >
+                      <FiCopy size={16} />
+                    </button>
+                    <button
+                      onClick={() => handlers.startEditing(category)}
+                      className="p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
+                      title="Edit"
+                      disabled={isLoading}
+                    >
+                      <FiEdit2 size={16} />
+                    </button>
+                  </>
+                )}
                 <button
-                  onClick={() => handlers.startAddingSubcategory(category.id)}
-                  className="p-2 text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-400 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
-                  title="Add subcategory"
+                  onClick={() => handlers.deleteCategory(category.id, category.parentId)}
+                  className="p-2 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-400 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
+                  title="Delete"
                   disabled={isLoading}
                 >
-                  <FiPlus size={16} />
+                  <FiTrash2 size={16} />
                 </button>
-              )}
-              <button
-                onClick={() => handlers.duplicateCategory(category)}
-                className="p-2 text-purple-500 hover:text-purple-600 dark:text-purple-400 dark:hover:text-purple-400 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
-                title="Duplicate"
-                disabled={isLoading}
-              >
-                <FiCopy size={16} />
-              </button>
-              <button
-                onClick={() => handlers.startEditing(category)}
-                className="p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
-                title="Edit"
-                disabled={isLoading}
-              >
-                <FiEdit2 size={16} />
-              </button>
-              <button
-                onClick={() => handlers.deleteCategory(category.id, category.parentId)}
-                className="p-2 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-400 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
-                title="Delete"
-                disabled={isLoading}
-              >
-                <FiTrash2 size={16} />
-              </button>
+              </div>
             </div>
           </div>
-        </div>
         )}
         
       {/* Add Subcategory input at the bottom */}
@@ -552,19 +584,30 @@ const CategoryManager: React.FC = () => {
         <div className="sticky top-0 bg-white dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700 z-10">
           <div className="flex flex-col md:flex-row md:justify-between w-full md:items-center gap-3">
             <div className="relative flex-1 min-w-[160px]">
-              <FaSearch className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search categories..."
-                className="w-full pl-9 pr-3 py-2 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+            <div className="relative">
+                <FaSearch className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search categories..."
+                  className="w-full pl-9 pr-8 py-2 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  >
+                    <FaTimes size={14} />
+                  </button>
+                )}
+              </div>
             </div>
             <button
               onClick={() => {
                 setIsAddingMainCategory(true);
                 setNewCategoryName("");
+                setSearchTerm("");
               }}
               disabled={isAddingMainCategory || isLoading}
               className={`flex items-center justify-center px-4 py-2 rounded-lg transition-colors whitespace-nowrap text-sm shadow-sm ${
@@ -576,6 +619,19 @@ const CategoryManager: React.FC = () => {
               <FaPlus className="mr-2 h-3 w-3" /> Add Category
             </button>
           </div>
+          {debouncedSearchTerm && (
+            <div className="mt-3 flex justify-between items-center">
+              <span className="text-sm text-gray-600 dark:text-gray-300">
+                {search.filteredCategories.length} results for "{debouncedSearchTerm}"
+              </span>
+              <button
+                onClick={() => setSearchTerm("")}
+                className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                Clear search
+              </button>
+            </div>
+          )}
 
           {/* Add Main Category Form */}
           {isAddingMainCategory && (
@@ -617,14 +673,14 @@ const CategoryManager: React.FC = () => {
         </div>
 
         {/* Category List */}
-        <div className="p-4">
+        <div className="flex-1 overflow-y-auto p-4">
           {isLoading ? (
-            <div className="flex justify-center p-8">
+            <div className="flex justify-center items-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
-          ) : searchTerm ? (
+          ) : debouncedSearchTerm ? (
             search.filteredCategories.length > 0 ? (
-              <div className="space-y-1">
+              <div className="space-y-2">
                 {search.filteredCategories.map((category) => (
                   <CategoryItem 
                     key={category.id} 
@@ -637,7 +693,7 @@ const CategoryManager: React.FC = () => {
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <svg
-                  className="h-12 w-12 text-gray-400"
+                  className="h-16 w-16 text-gray-300 dark:text-gray-600"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -649,11 +705,12 @@ const CategoryManager: React.FC = () => {
                     d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <h3 className="mt-4 text-sm font-medium text-gray-900 dark:text-white">
+                <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">
                   No categories found
                 </h3>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Try adjusting your search or create a new category
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-md">
+                  No categories match "<span className="font-medium">{debouncedSearchTerm}</span>". 
+                  Try different keywords or create a new category.
                 </p>
               </div>
             )
@@ -671,7 +728,7 @@ const CategoryManager: React.FC = () => {
           ) : (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <svg
-                className="h-12 w-12 text-gray-400"
+                className="h-16 w-16 text-gray-300 dark:text-gray-600"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -683,10 +740,10 @@ const CategoryManager: React.FC = () => {
                   d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <h3 className="mt-4 text-sm font-medium text-gray-900 dark:text-white">
+              <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">
                 No categories yet
               </h3>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                 Get started by adding your first category
               </p>
             </div>

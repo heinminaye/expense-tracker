@@ -4,12 +4,14 @@ import SingleDatePicker from "../datepicker/singledatepicker";
 import { deleteBreakdownItem } from "../../libs/api";
 import { toast } from "sonner";
 import useStore from "../../store";
+import { fetchCategories } from "../../libs/api";
+import { Category } from "../types/category";
 
 interface ExpenseModalProps {
   show: boolean;
   onClose: () => void;
   onSave: (expense: Omit<ExpenseItem, "id">) => void;
-  initialData?: Omit<ExpenseItem, "id">;
+  initialData?: Omit<ExpenseItem, "id"> & { category_id?: string };
   isEditMode?: boolean;
 }
 
@@ -19,6 +21,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
   onSave,
   initialData = {
     category: "",
+    category_id: "",
     expense: 0,
     date: new Date().toISOString().split("T")[0],
     note: "",
@@ -26,20 +29,19 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
   },
   isEditMode = false,
 }) => {
-  const [newExpense, setNewExpense] =
-    useState<Omit<ExpenseItem, "id">>(initialData);
+  const [newExpense, setNewExpense] = useState<Omit<ExpenseItem, "id"> & { category_id?: string }>(initialData);
   const [breakdownItems, setBreakdownItems] = useState<BreakdownItem[]>(
     initialData.breakdownItems || [{ name: "", price: 0, quantity: 1 }]
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const modalRef = useRef<HTMLDivElement>(null);
-  
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<number | null>(null);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target as Node)
-      ) {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
         onClose();
       }
     };
@@ -51,14 +53,41 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
     }
     return () => {
       document.body.style.overflow = "auto";
-      document.addEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [show, onClose]);
+
+  useEffect(() => {
+    if (show) {
+      const loadCategories = async () => {
+        setIsLoadingCategories(true);
+        try {
+          const { user } = useStore.getState();
+          const response = await fetchCategories({ user_id: user });
+          if (response.returncode === "200") {
+            const mainCategories = response.data.filter(
+              (cat: Category) => cat.parentId === null
+            );
+            setCategories(mainCategories);
+          } else {
+            toast.error(response.message || "Failed to load categories");
+          }
+        } catch (error) {
+          console.error("Error loading categories:", error);
+          toast.error("Failed to load categories");
+        } finally {
+          setIsLoadingCategories(false);
+        }
+      };
+
+      loadCategories();
+    }
+  }, [show]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!newExpense.category) {
+    if (!newExpense.category_id) {
       newErrors.category = "Category is required";
     }
 
@@ -82,13 +111,10 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
     setBreakdownItems([...breakdownItems, { name: "", price: 0, quantity: 1 }]);
   };
 
-  const [isDeleting, setIsDeleting] = useState<number | null>(null);
-
   const handleRemoveBreakdownItem = async (index: number) => {
     const itemToRemove = breakdownItems[index];
     const { user } = useStore.getState();
-  
-    // If it's an existing item (has an ID) and we're in edit mode
+
     if (isEditMode && itemToRemove.id) {
       setIsDeleting(index);
       try {
@@ -96,13 +122,13 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
           user_id: user,
           breakdown_item_id: itemToRemove.id,
         });
-        
+
         if (response.returncode !== "200") {
           toast.error(response.message || "Failed to delete item");
           setIsDeleting(null);
           return;
         }
-  
+
         toast.success("Item deleted successfully");
       } catch (error) {
         console.error("Error deleting breakdown item:", error);
@@ -113,8 +139,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
         setIsDeleting(null);
       }
     }
-  
-    // Update the local state regardless (for both backend and frontend items)
+
     const updatedItems = [...breakdownItems];
     updatedItems.splice(index, 1);
     setBreakdownItems(updatedItems);
@@ -133,12 +158,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
   ) => {
     if (field === "quantity") {
       const stringValue = String(value);
-
-      if (
-        !/^\d+[\u1000-\u109Fa-zA-Z]*$/.test(stringValue) &&
-        stringValue !== ""
-      ) {
-        // If invalid, don't update the state
+      if (!/^\d+[\u1000-\u109Fa-zA-Z]*$/.test(stringValue) && stringValue !== "") {
         return;
       }
     }
@@ -152,12 +172,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
     const updatedItems = [...breakdownItems];
     updatedItems[index] = {
       ...updatedItems[index],
-      [field]:
-        field === "price"
-          ? Number(value)
-          : field === "quantity"
-          ? value
-          : value,
+      [field]: field === "price" ? Number(value) : value,
     };
 
     setBreakdownItems(updatedItems);
@@ -170,18 +185,17 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
     const expenseToSave = {
       ...newExpense,
+      category_id: newExpense.category_id,
       breakdownItems: breakdownItems
-      .filter((item) => item.name)
-      .map(item => ({
-        ...item,
-
-        ...(item.id ? { id: item.id } : {})
-      })),
-  };
+        .filter((item) => item.name)
+        .map((item) => ({
+          ...item,
+          ...(item.id ? { id: item.id } : {}),
+        })),
+    };
     onSave(expenseToSave);
   };
 
-  // Format number with commas (e.g., 1234567.89 → "1,234,567.89")
   const formatNumberWithCommas = (num: number): string => {
     return num.toLocaleString("en-US", {
       maximumFractionDigits: 2,
@@ -231,7 +245,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
           <div className="flex-1 flex flex-col overflow-visible p-4">
             <div className="grid sm:grid-cols-3 grid-col-1 gap-4 h-full">
               {/* Left Side - Basic Information */}
-              <div className="flex flex-col sm:col-span-1 col-span-2  h-full space-y-4">
+              <div className="flex flex-col sm:col-span-1 col-span-2 h-full space-y-4">
                 {/* Category */}
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -239,40 +253,69 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                   </label>
                   <div className="relative">
                     <select
-                      value={newExpense.category}
-                      onChange={(e) =>
+                      value={newExpense.category_id}
+                      onChange={(e) => {
+                        const selectedCategory = categories.find(cat => cat.id === e.target.value);
                         setNewExpense({
                           ...newExpense,
-                          category: e.target.value,
-                        })
-                      }
-                      className={`appearance-none w-full py-2 px-3 rounded-md border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
+                          category: selectedCategory?.name || "",
+                          category_id: e.target.value
+                        });
+                      }}
+                      className={`appearance-none leading-6 w-full py-1.5 px-3 rounded-md border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm ${
                         errors.category
                           ? "border-red-400 focus:ring-red-300"
                           : "border-gray-300 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700"
                       }`}
+                      disabled={isLoadingCategories}
                     >
                       <option value="">Select a category</option>
-                      <option value="Food">Food</option>
-                      <option value="General">General</option>
-                      <option value="Fuel">Fuel</option>
-                      <option value="Transport">Transport</option>
-                      <option value="Entertainment">Entertainment</option>
-                      <option value="Utilities">Utilities</option>
+                      {isLoadingCategories ? (
+                        <option value="" disabled>Loading categories...</option>
+                      ) : (
+                        categories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))
+                      )}
                     </select>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                      <svg
-                        className="h-4 w-4 text-gray-400"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
+                      {isLoadingCategories ? (
+                        <svg
+                          className="animate-spin h-4 w-4 text-gray-400"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                      ) : (
+                        <svg
+                          className="h-4 w-4 text-gray-400"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      )}
                     </div>
                   </div>
                   {errors.category && (
@@ -296,7 +339,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                   )}
                 </div>
 
-                {/* Notes - Takes remaining space */}
+                {/* Notes */}
                 <div className="flex-1 flex flex-col min-h-[150px]">
                   <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                     General Notes
@@ -323,9 +366,9 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                   <button
                     type="button"
                     onClick={handleAddBreakdownItem}
-                    disabled={!newExpense.category}
+                    disabled={!newExpense.category_id}
                     className={`flex items-center px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 ${
-                      newExpense.category
+                      newExpense.category_id
                         ? "bg-blue-600 text-white hover:bg-blue-700"
                         : "bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-700"
                     }`}
@@ -392,7 +435,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                                     : "border-gray-300 focus:border-blue-500 dark:border-gray-600"
                                 }`}
                                 placeholder="Item name"
-                                disabled={!newExpense.category}
+                                disabled={!newExpense.category_id}
                               />
                             </td>
                             <td className="px-1 py-1 whitespace-nowrap">
@@ -408,7 +451,7 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                                 }
                                 pattern="^\d+[\u1000-\u109Fa-zA-Z]*$"
                                 className="w-20 md:w-24 p-2 leading-3 rounded border focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-200 text-sm border-gray-300 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700"
-                                disabled={!newExpense.category}
+                                disabled={!newExpense.category_id}
                               />
                             </td>
                             <td className="px-1 py-1 whitespace-nowrap">
@@ -446,55 +489,57 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                                       : "border-gray-300 focus:border-blue-500 dark:border-gray-600"
                                   }`}
                                   placeholder="0"
-                                  disabled={!newExpense.category}
+                                  disabled={!newExpense.category_id}
                                 />
                               </div>
                             </td>
                             <td className="px-1 whitespace-nowrap text-right">
-                            <button
-  type="button"
-  onClick={() => handleRemoveBreakdownItem(index)}
-  disabled={!newExpense.category || isDeleting === index}
-  className={`p-1 pr-2 rounded transition-all duration-200 ${
-    !newExpense.category || isDeleting === index
-      ? "text-gray-300 cursor-not-allowed dark:text-gray-600"
-      : "text-red-600 hover:text-red-800 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-gray-700"
-  }`}
-  aria-label="Remove item"
->
-  {isDeleting === index ? (
-    <svg
-      className="animate-spin h-4 w-4 text-gray-400"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      ></circle>
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-      ></path>
-    </svg>
-  ) : (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="h-4 w-4"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-    >
-      <path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zm3-9a1 1 0 012 0v6a1 1 0 01-2 0V10zm4 0a1 1 0 012 0v6a1 1 0 01-2 0V10z" />
-      <path d="M15.5 4l-1-1h-5l-1 1H5v2h14V4h-3.5z" />
-    </svg>
-  )}
-</button>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveBreakdownItem(index)}
+                                disabled={
+                                  !newExpense.category_id || isDeleting === index
+                                }
+                                className={`p-1 pr-2 rounded transition-all duration-200 ${
+                                  !newExpense.category_id || isDeleting === index
+                                    ? "text-gray-300 cursor-not-allowed dark:text-gray-600"
+                                    : "text-red-600 hover:text-red-800 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-gray-700"
+                                }`}
+                                aria-label="Remove item"
+                              >
+                                {isDeleting === index ? (
+                                  <svg
+                                    className="animate-spin h-4 w-4 text-gray-400"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                  </svg>
+                                ) : (
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-4 w-4"
+                                    viewBox="0 0 24 24"
+                                    fill="currentColor"
+                                  >
+                                    <path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zm3-9a1 1 0 012 0v6a1 1 0 01-2 0V10zm4 0a1 1 0 012 0v6a1 1 0 01-2 0V10z" />
+                                    <path d="M15.5 4l-1-1h-5l-1 1H5v2h14V4h-3.5z" />
+                                  </svg>
+                                )}
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -513,8 +558,8 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
           </div>
 
           {/* Total and Submit/Cancel */}
-          <div className="sticky bottom-0 z-20 bg-white">
-            <div className="p-3 border-t border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+          <div className="sticky bottom-0 z-20 bg-white dark:bg-gray-800">
+            <div className="p-3 border-t border-gray-200 dark:border-gray-700">
               <div className="p-2 rounded border mb-3 bg-blue-50 border-blue-200 dark:bg-gray-700 dark:border-gray-600">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-semibold text-gray-800 dark:text-gray-300">
