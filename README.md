@@ -1,50 +1,31 @@
-# React + TypeScript + Vite
+# 💸 Expense Tracker Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Welcome to the **Expense Tracker Frontend**! This is the front-end application built with **React**, **Vite**, and **Tailwind CSS** to manage expenses and categories. It communicates with the backend API to fetch, add, and manage expenses and categories.
 
-Currently, two official plugins are available:
+### 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The frontend currently supports the following features:
 
-## Expanding the ESLint configuration
+- **Add, update, delete and priting single or all expenses**
+- **Add and view categories**
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+Upcoming features include:
 
-- Configure the top-level `parserOptions` property like this:
+- **Edit and delete categories**
+- **Income tracking**
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+### 🧰 Prerequisites
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+Before running the frontend, you will need the backend API running locally. Please follow the steps below to set it up.
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+### ⚙️ Getting Started
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+#### Step 1: Clone the backend repository
+
+Start by cloning the backend repository and setting it up. You can find the backend repository here: [Backend Repository Link](https://github.com/yourusername/expense-tracker-backend).
+
+```bash
+git clone https://github.com/yourusername/expense-tracker-backend.git
+cd expense-tracker-backend
+npm install
+npm start
