@@ -24,6 +24,11 @@ Before running the frontend, you will need the backend API running locally. Plea
 
 Start by cloning the backend repository and setting it up. You can find the backend repository here: [Backend Repository Link](https://github.com/yourusername/expense-tracker-backend).
 
+### ⚙️ When you first run the backend, the default admin user credentials are:
+
+- **Email**: admin@gmail.com
+- **Password**: password
+
 ```bash
 git clone https://github.com/yourusername/expense-tracker-backend.git
 cd expense-tracker-backend
